@@ -9,7 +9,7 @@ This project is a simple Flask application that provides a single-page interface
 - **Password Hashing:** Passwords are hashed with SHA256 before storage.
 - **Flash Messages:** Users receive flash messages styled in blue for registration/login feedback.
 - **Single-Page Interface:** Both registration and login forms are available on one page.
-- **SQLite Database:** All user data is stored in an `SQLite` database (`users.db`).
+- **SQLite Database:** All user data is stored in an `SQLite` database (`nittanybusiness.db`).
 
 ## Prerequisites
 
