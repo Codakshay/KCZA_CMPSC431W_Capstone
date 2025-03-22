@@ -3,8 +3,7 @@ import sqlite3
 import hashlib
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with your secret key for session management
-DATABASE = 'users.db'
+DATABASE = 'nittanybusiness.db'
 
 def hash_password(password: str) -> str:
     """Securely hash the provided password using SHA256."""
@@ -14,8 +13,8 @@ def create_users_table():
     """Create the users table if it doesn't already exist."""
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
+    cursor.execute(f'''
+        CREATE TABLE IF NOT EXISTS Users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
             hashed_password TEXT NOT NULL
@@ -30,7 +29,7 @@ def register_user(email: str, password: str) -> bool:
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO users (email, hashed_password) VALUES (?, ?)", (email, hashed_pwd))
+        cursor.execute("INSERT INTO Users (email, hashed_password) VALUES (?, ?)", (email, hashed_pwd))
         conn.commit()
         return True
     except sqlite3.IntegrityError:
@@ -43,7 +42,7 @@ def authenticate_user(email: str, password: str) -> bool:
     hashed_input = hash_password(password)
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute("SELECT hashed_password FROM users WHERE email = ?", (email,))
+    cursor.execute("SELECT hashed_password FROM Users WHERE email = ?", (email,))
     result = cursor.fetchone()
     conn.close()
     if result is None:
