@@ -3,17 +3,16 @@ import sqlite3
 import hashlib
 
 app = Flask(__name__)
+app.secret_key = "secret_key"
 DATABASE = 'nittanybusiness.db'
 
 def hash_password(password: str) -> str:
-    """Securely hash the provided password using SHA256."""
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 def create_users_table():
-    """Create the users table if it doesn't already exist."""
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute(f'''
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS Users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
@@ -24,7 +23,6 @@ def create_users_table():
     conn.close()
 
 def register_user(email: str, password: str) -> bool:
-    """Register a new user by inserting their email and hashed password."""
     hashed_pwd = hash_password(password)
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -38,7 +36,6 @@ def register_user(email: str, password: str) -> bool:
         conn.close()
 
 def authenticate_user(email: str, password: str) -> bool:
-    """Authenticate a user by comparing the hash of the provided password with the stored hash."""
     hashed_input = hash_password(password)
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -77,4 +74,3 @@ def login():
 if __name__ == '__main__':
     create_users_table()
     app.run(debug=True)
-
