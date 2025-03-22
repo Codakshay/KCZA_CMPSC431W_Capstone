@@ -39,7 +39,7 @@ This project is a simple Flask application that provides a single-page interface
     ├── app.py              # Main Flask application
     ├── import_users.py     # Script to import CSV data into the database
     ├── Users.csv           # CSV file with initial user data (plain-text passwords)
-    ├── nittanybusiness.db            # SQLite database (auto-created or updated on first run)
+    ├── nittanybusiness.db  # SQLite database (auto-created or updated on first run)
     ├── templates           # Folder for HTML templates
     │   └── index.html      # HTML template for the main interface
     └── README.md           # Project documentation
