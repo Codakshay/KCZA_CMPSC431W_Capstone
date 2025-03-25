@@ -6,9 +6,11 @@ app = Flask(__name__)
 app.secret_key = "secret_key"
 DATABASE = 'nittanybusiness.db'
 
+# hashes the password
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
+# creates the Users table
 def create_users_table():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -22,6 +24,7 @@ def create_users_table():
     conn.commit()
     conn.close()
 
+# inserts a new user into the User table, returns true on success
 def register_user(email: str, password: str) -> bool:
     hashed_pwd = hash_password(password)
     conn = sqlite3.connect(DATABASE)
@@ -30,11 +33,12 @@ def register_user(email: str, password: str) -> bool:
         cursor.execute("INSERT INTO Users (email, hashed_password) VALUES (?, ?)", (email, hashed_pwd))
         conn.commit()
         return True
-    except sqlite3.IntegrityError:
-        return False  # Email already exists
+    except sqlite3.IntegrityError: # Email already exists
+        return False
     finally:
         conn.close()
 
+# makes sure the users email and password are correct and in the Users table
 def authenticate_user(email: str, password: str) -> bool:
     hashed_input = hash_password(password)
     conn = sqlite3.connect(DATABASE)
@@ -42,10 +46,10 @@ def authenticate_user(email: str, password: str) -> bool:
     cursor.execute("SELECT hashed_password FROM Users WHERE email = ?", (email,))
     result = cursor.fetchone()
     conn.close()
-    if result is None:
+    if result is None: # not in the table
         return False
     stored_hash = result[0]
-    return stored_hash == hashed_input
+    return stored_hash == hashed_input # if true, password match
 
 @app.route('/')
 def index():
@@ -59,7 +63,7 @@ def register():
         flash("Registration successful. You can now log in.")
     else:
         flash("Registration failed. Email already exists.")
-    return redirect(url_for('index'))
+    return redirect(url_for('index')) # redirect prevents sending the form data again
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -69,7 +73,7 @@ def login():
         flash("Login successful!")
     else:
         flash("Invalid email or password.")
-    return redirect(url_for('index'))
+    return redirect(url_for('index')) # redirect prevents sending the form data again
 
 if __name__ == '__main__':
     create_users_table()
