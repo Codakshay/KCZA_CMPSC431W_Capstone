@@ -2,9 +2,9 @@ import pandas as pd
 import sqlite3
 import hashlib
 
-database = "nittanybusiness.db"
+database = "../nittanybusiness.db"
 table = "Users"
-csv = "Users.csv"
+csv = "NittanyBusinessDataset_v3/Users.csv"
 
 # hashes the password
 def hash_password(password):

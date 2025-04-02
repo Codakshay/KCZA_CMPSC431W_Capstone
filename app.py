@@ -3,7 +3,7 @@ import sqlite3
 import hashlib
 
 app = Flask(__name__)
-app.secret_key = "secret_key"
+app.secret_key = "secret_key" # needed for flash messages
 DATABASE = 'nittanybusiness.db'
 
 # hashes the password
