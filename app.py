@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 import hashlib
 
+import search as s
+
 app = Flask(__name__)
 app.secret_key = "secret_key" # needed for flash messages
 DATABASE = 'nittanybusiness.db'
@@ -11,18 +13,18 @@ def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 # creates the Users table
-def create_users_table():
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS Users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE NOT NULL,
-            hashed_password TEXT NOT NULL
-        )
-    ''')
-    conn.commit()
-    conn.close()
+# def create_users_table():
+#     conn = sqlite3.connect(DATABASE)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         CREATE TABLE IF NOT EXISTS Users (
+#             id INTEGER PRIMARY KEY AUTOINCREMENT,
+#             email TEXT UNIQUE NOT NULL,
+#             hashed_password TEXT NOT NULL
+#         )
+#     ''')
+#     conn.commit()
+#     conn.close()
 
 # inserts a new user into the User table, returns true on success
 def register_user(email: str, password: str) -> bool:
@@ -75,6 +77,14 @@ def login():
         flash("Invalid email or password.")
     return redirect(url_for('index')) # redirect prevents sending the form data again
 
+@app.route('/search', methods=["GET"])
+def search():
+    keywords = request.args.get('keywords', '').strip()
+    min_price = request.args.get('min_price', type=int)
+    max_price = request.args.get('max_price', type=int)
+    products = s.search_for(keywords, min_price, max_price)
+    return render_template("search.html", results=products)
+
 if __name__ == '__main__':
-    create_users_table()
+    # create_users_table()
     app.run(debug=True)
