@@ -2,9 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Search</title>
+    <title>Product Search</title>
 </head>
 <body>
+    <h2>Search for Products</h2>
+    <form action="/search", method="GET">
+        <label for="keywords">Keywords:</label>
+        <input type="text" id="keywords" name="keywords" required>
 
+        <label for="min_price">Min Price:</label>
+        <input type="number" id="min_price" name="min_price" step="1">
+
+        <label for="max_price">Max Price:</label>
+        <input type="number" id="max_price" name="max_price" step="1">
+
+        <button type="submit">Search</button>
+    </form>
+
+    {% if results %}
+        <h3>Search Results</h3>
+        <ul>
+            {% for product in results %}
+                <li>
+                    <strong>{{ product.product_name }}</strong> - ${{ product.product_price }}<br>
+                    Seller: {{ product.business_name }} | Status: {{ "Available" if product.status == 1 else "Sold Out" }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% elif results is not none %}
+        <p>No matching products found</p>
+    {% endif %}
 </body>
 </html>
