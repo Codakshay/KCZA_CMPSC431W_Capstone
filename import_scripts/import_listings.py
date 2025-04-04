@@ -5,7 +5,12 @@ database = "../nittanybusiness.db"
 table = "Listings"
 csv = "NittanyBusinessDataset_v3/Product_Listings.csv"
 
+def remove_dollar_sign(price):
+    return price.replace("$", "")
+
 df = pd.read_csv(csv)
+df['Product_Price'] = df['Product_Price'].apply(remove_dollar_sign)
+
 conn = sqlite3.connect(database)
 cursor = conn.cursor()
 
