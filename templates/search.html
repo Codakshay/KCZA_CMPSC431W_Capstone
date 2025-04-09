@@ -29,12 +29,10 @@
                 </li>
 
             {% endfor %}
-            <li>
-                 <a href="{{ url_for('view_category', parent_category='All') }}">Browse Category Hierarchy (Root: All)</a>
-              </li>
         </ul>
     {% elif results is not none %}
         <p>No matching products found</p>
     {% endif %}
+<p><a href="{{ url_for('view_category', parent_category='All') }}">Browse Categories</a></p>
 </body>
 </html>

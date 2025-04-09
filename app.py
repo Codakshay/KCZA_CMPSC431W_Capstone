@@ -241,15 +241,22 @@ def view_category(parent_category):
 
     products = []
     if query_category != "Root":
-        cursor.execute("""
-            SELECT Seller_Email, Listing_ID, Product_Title, Product_Price 
-            FROM Listings 
-            WHERE Category = ? AND Status = 1
-        """, (query_category,))
+        cursor.execute(
+            "SELECT Seller_Email, Listing_ID, Product_Title, Product_Price FROM Product_Listings WHERE Category = ? AND Status = 1",
+            (query_category,))
         products = cursor.fetchall()
     conn.close()
 
-    return render_template("categories.html", parent_category=display_category, subcategories=subcategories, products=products)
+    user_role = None
+    if 'email' in session:
+        user_role = get_user_role(session['email'])
+
+    return render_template("categories.html",
+                           parent_category=display_category,
+                           subcategories=subcategories,
+                           products=products,
+                           user_role=user_role)
+
 
 @app.route('/seller/add_listing', methods=["GET", "POST"])
 def add_listing():
