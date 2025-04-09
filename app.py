@@ -113,6 +113,14 @@ def get_user_role(email: str) -> str:
 
     return 'Unknown'
 
+def generate_listing_id(seller_email):
+    """Generate a unique Listing_ID for the given seller."""
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT MAX(Listing_ID) FROM Listings WHERE Seller_Email = ?", (seller_email,))
+    result = cursor.fetchone()[0]
+    conn.close()
+    return 1 if result is None else result + 1
 
 @app.route('/')
 def index():
@@ -216,6 +224,94 @@ def search():
     max_price = request.args.get('max_price', type=int)
     products = s.search_for(keywords, min_price, max_price)
     return render_template("search.html", results=products)
+
+@app.route('/categories/<parent_category>')
+def view_category(parent_category):
+    if parent_category == "All":
+        query_category = "Root"
+        display_category = "All"
+    else:
+        query_category = parent_category
+        display_category = parent_category
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT category_name FROM Categories WHERE parent_category = ?", (query_category,))
+    subcategories = cursor.fetchall()
+
+    products = []
+    if query_category != "Root":
+        cursor.execute("""
+            SELECT Seller_Email, Listing_ID, Product_Title, Product_Price 
+            FROM Listings 
+            WHERE Category = ? AND Status = 1
+        """, (query_category,))
+        products = cursor.fetchall()
+    conn.close()
+
+    return render_template("categories.html", parent_category=display_category, subcategories=subcategories, products=products)
+
+@app.route('/seller/add_listing', methods=["GET", "POST"])
+def add_listing():
+    if "email" not in session:
+        flash("Please log in as a seller.")
+        return redirect(url_for("index"))
+    email = session["email"]
+    role = get_user_role(email)
+    if role != "Seller":
+        flash("Access restricted: Only sellers can add listings.")
+        return redirect(url_for("index"))
+
+    if request.method == "POST":
+        category = request.form.get("category")
+        product_title = request.form.get("product_title")
+        product_name = request.form.get("product_name")
+        product_description = request.form.get("product_description")
+        try:
+            quantity = int(request.form.get("quantity"))
+            product_price = float(request.form.get("product_price"))
+        except (ValueError, TypeError):
+            flash("Quantity and price must be numeric.")
+            return redirect(url_for("add_listing"))
+        listing_id = generate_listing_id(email)
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO Listings (Seller_Email, Listing_ID, Category, Product_Title, Product_Name, Product_Description, Quantity, Product_Price, Status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+            ''', (email, listing_id, category, product_title, product_name, product_description, quantity, product_price))
+            conn.commit()
+        flash("Product listing added successfully.")
+        return redirect(url_for("seller_dashboard"))
+    else:
+        # For GET requests, load available categories to choose from.
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT category_name FROM Categories")
+        categories = cursor.fetchall()
+        conn.close()
+        return render_template("add_listing.html", categories=categories)
+
+@app.route('/seller/dashboard')
+def seller_dashboard():
+    if "email" not in session:
+        flash("Please log in as a seller.")
+        return redirect(url_for("index"))
+    email = session["email"]
+    role = get_user_role(email)
+    if role != "Seller":
+        flash("Access restricted: Only sellers can view the dashboard.")
+        return redirect(url_for("index"))
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT Listing_ID, Product_Title, Category, Quantity, Product_Price, Status 
+        FROM Listings 
+        WHERE Seller_Email = ?
+    """, (email,))
+    listings = cursor.fetchall()
+    conn.close()
+    return render_template("seller_dashboard.html", listings=listings)
 
 if __name__ == '__main__':
     # create_users_table()

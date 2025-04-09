@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Category: {{ parent_category }}</title>
+</head>
+<body>
+  <h1>Category: {{ parent_category }}</h1>
+
+  <h2>Subcategories</h2>
+  {% if subcategories %}
+    <ul>
+    {% for sub in subcategories %}
+      <li><a href="{{ url_for('view_category', parent_category=sub[0]) }}">{{ sub[0] }}</a></li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p>No subcategories found.</p>
+  {% endif %}
+
+  {% if products %}
+    <h2>Products in {{ parent_category }}</h2>
+    <ul>
+      {% for product in products %}
+        <li>
+          Seller: {{ product[0] }}, Listing ID: {{ product[1] }}, Title: {{ product[2] }}, Price: {{ product[3] }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {% if parent_category != "All" %}
+      <p>No products found in this category.</p>
+    {% endif %}
+  {% endif %}
+
+  <p><a href="{{ url_for('profile') }}">Back to Home</a></p>
+</body>
+</html>

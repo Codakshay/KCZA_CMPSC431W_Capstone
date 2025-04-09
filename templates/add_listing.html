@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Add Product Listing</title>
+</head>
+<body>
+  <h1>Add Product Listing</h1>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post" action="{{ url_for('add_listing') }}">
+    <label for="seller_email">Seller Email:</label>
+    <input type="email" id="seller_email" name="seller_email" value="{{ session.get('email') }}" readonly>
+
+    <label for="category">Category:</label>
+    <select id="category" name="category">
+      {% for cat in categories %}
+        <option value="{{ cat[0] }}">{{ cat[0] }}</option>
+      {% endfor %}
+    </select><br><br>
+
+    <label for="product_title">Product Title:</label>
+    <input type="text" id="product_title" name="product_title" required><br><br>
+
+    <label for="product_name">Product Name:</label>
+    <input type="text" id="product_name" name="product_name" required><br><br>
+
+    <label for="product_description">Product Description:</label>
+    <textarea id="product_description" name="product_description" required></textarea><br><br>
+
+    <label for="quantity">Quantity:</label>
+    <input type="number" id="quantity" name="quantity" required><br><br>
+
+    <label for="product_price">Product Price:</label>
+    <input type="text" id="product_price" name="product_price" required><br><br>
+
+    <input type="submit" value="Add Listing">
+  </form>
+
+  <p><a href="{{ url_for('seller_dashboard') }}">Back to Dashboard</a></p>
+</body>
+</html>

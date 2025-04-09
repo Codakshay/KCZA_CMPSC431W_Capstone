@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Seller Dashboard</title>
+</head>
+<body>
+  <h1>Seller Dashboard for {{ session.get('email') }}</h1>
+
+  <h2>Your Listings</h2>
+  {% if listings %}
+    <table border="1">
+      <tr>
+        <th>Listing ID</th>
+        <th>Product Title</th>
+        <th>Category</th>
+        <th>Quantity</th>
+        <th>Price</th>
+        <th>Status</th>
+      </tr>
+      {% for listing in listings %}
+      <tr>
+        <td>{{ listing[0] }}</td>
+        <td>{{ listing[1] }}</td>
+        <td>{{ listing[2] }}</td>
+        <td>{{ listing[3] }}</td>
+        <td>${{ listing[4] }}</td>
+        <td>
+          {% if listing[5] == 1 %}
+            Active
+          {% elif listing[5] == 0 %}
+            Inactive
+          {% elif listing[5] == 2 %}
+            Sold
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No listings found.</p>
+  {% endif %}
+
+  <p><a href="{{ url_for('add_listing') }}">Add New Listing</a></p>
+  <p><a href="{{ url_for('profile') }}">Back to Home</a></p>
+</body>
+</html>

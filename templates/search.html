@@ -27,7 +27,11 @@
                     <strong>{{ product.product_name }}</strong> - ${{ product.product_price }}<br>
                     Seller: {{ product.business_name }} | Status: {{ "Available" if product.status == 1 else "Sold Out" }}
                 </li>
+
             {% endfor %}
+            <li>
+                 <a href="{{ url_for('view_category', parent_category='All') }}">Browse Category Hierarchy (Root: All)</a>
+              </li>
         </ul>
     {% elif results is not none %}
         <p>No matching products found</p>
