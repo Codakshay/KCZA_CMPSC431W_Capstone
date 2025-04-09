@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>User Login & Registration</title>
   <style>
+    /* CSS Reset */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
-    /* body styling with a gradient background */
+    /* Body styling with a gradient background */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #74ebd5, #ACB6E5);
@@ -21,7 +22,7 @@
       justify-content: center;
     }
 
-    /* container for the card */
+    /* Container for the card */
     .container {
       background-color: #fff;
       border-radius: 8px;
@@ -30,26 +31,25 @@
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     }
 
-    /* heading styling */
+    /* Heading styling */
     h1 {
       text-align: center;
       margin-bottom: 20px;
       color: #333;
     }
 
-    /* section headings */
+    /* Section headings */
     h2 {
       margin-bottom: 10px;
       color: #333;
       font-size: 1.1rem;
     }
 
-    /* form element styling */
+    /* Form element styling */
     form {
       margin-bottom: 20px;
     }
 
-    /* label styling */
     label {
       display: block;
       color: #555;
@@ -57,7 +57,6 @@
       margin-bottom: 5px;
     }
 
-    /* input styling for email and password */
     input[type="email"],
     input[type="password"] {
       width: 100%;
@@ -67,7 +66,6 @@
       border-radius: 4px;
     }
 
-    /* label styling for submit */
     input[type="submit"] {
       width: 100%;
       padding: 10px;
@@ -80,12 +78,11 @@
       transition: background-color 0.3s;
     }
 
-    /* label styling for hover submit */
     input[type="submit"]:hover {
       background-color: #434190;
     }
 
-    /* flash messages styling */
+    /* Flash messages styling (blue variant) */
     .flash-messages {
       margin-bottom: 20px;
       padding: 10px;
@@ -104,7 +101,11 @@
   <div class="container">
     <h1>Nittany Business</h1>
 
-    <!-- flash messages -->
+    {% if session.get('email') %}
+  <p>Welcome, {{ session['email'] }} | <a href="{{ url_for('profile') }}">Profile</a> | <a href="{{ url_for('logout') }}">Logout</a></p>
+{% endif %}
+
+
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="flash-messages">
@@ -117,19 +118,24 @@
       {% endif %}
     {% endwith %}
 
-    <!-- register form -->
     <form method="post" action="/register">
-      <h2>Register</h2>
-      <label for="reg_email">Email:</label>
-      <input type="email" id="reg_email" name="email" placeholder="Enter your email" required>
+  <h2>Register</h2>
+  <label for="reg_email">Email:</label>
+  <input type="email" id="reg_email" name="email" placeholder="Enter your email" required>
 
-      <label for="reg_password">Password:</label>
-      <input type="password" id="reg_password" name="password" placeholder="Enter your password" required>
+  <label for="reg_password">Password:</label>
+  <input type="password" id="reg_password" name="password" placeholder="Enter your password" required>
 
-      <input type="submit" value="Register">
-    </form>
+  <label for="reg_role">Role:</label>
+  <select id="reg_role" name="role" required>
+    <option value="Buyer">Buyer</option>
+    <option value="Seller">Seller</option>
+  </select>
 
-    <!-- login form -->
+  <input type="submit" value="Register">
+</form>
+
+
     <form method="post" action="/login">
       <h2>Login</h2>
       <label for="login_email">Email:</label>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    input[type="password"], input[type="submit"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .readonly {
+      background-color: #e9ecef;
+      padding: 10px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>User Profile</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for msg in messages %}
+            <li>{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <br>
+
+      <div class="readonly">{{ email }}</div>
+
+      <label for="password">New Password (optional):</label>
+      <input type="password" id="password" name="password" placeholder="Enter new password">
+        <a href="{{ url_for('request_email_change') }}">Request Email Change</a>
+
+      <input type="submit" value="Update Profile">
+    </form>
+
+    <br>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </div>
+</body>
+</html>
