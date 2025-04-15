@@ -320,6 +320,92 @@ def seller_dashboard():
     conn.close()
     return render_template("seller_dashboard.html", listings=listings)
 
+@app.route('/product/<int:product_id>')
+def show_product(product_id):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("""SELECT product_name, product_price, seller_email, status, quantity
+    FROM Listings WHERE listing_id = ?""", (product_id,))
+    row = cursor.fetchone()
+
+    if row:
+        product = {
+            'name': row[0],
+            'price': row[1],
+            'seller_email': row[2],
+            'status': row[3],
+            'quantity': row[4]
+        }
+        return render_template('product.html', product=product, product_id=product_id)
+    else:
+        return "Product not found", 404
+
+
+@app.route('/order/<int:product_id>', methods=['GET', 'POST'])
+def order_product(product_id):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    # Get product info
+    cursor.execute("""SELECT product_name, product_price, seller_email, status, quantity
+                      FROM Listings WHERE listing_id = ?""", (product_id,))
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return "Product not found", 404
+
+    product = {
+        'name': row[0],
+        'price': row[1],
+        'seller_email': row[2],
+        'status': row[3],
+        'quantity': row[4]
+    }
+
+    if request.method == 'POST':
+        quantity_to_purchase = int(request.form.get('quantity', 0))
+
+        if quantity_to_purchase > product['quantity']:
+            conn.close()
+            return f"Not enough inventory. Only {product['quantity']} left.", 400
+
+        # Update quantity
+        new_quantity = product['quantity'] - quantity_to_purchase
+        cursor.execute("UPDATE Listings SET quantity = ? WHERE listing_id = ?", (new_quantity, product_id))
+        conn.commit()
+        conn.close()
+
+        # Redirect to review page, passing quantity as a query param
+        return redirect(url_for('review_product', product_id=product_id, quantity=quantity_to_purchase))
+
+    # GET request
+    quantity = request.args.get('quantity', type=int)
+    conn.close()
+    return render_template('order_product.html', product=product, product_id=product_id, quantity=quantity)
+
+
+@app.route('/review/<int:product_id>')
+def review_product(product_id):
+    quantity = request.args.get('quantity', type=int)
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("""SELECT product_name, seller_email FROM Listings WHERE listing_id = ?""", (product_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return "Product not found", 404
+
+    product = {
+        'name': row[0],
+        'seller_email': row[1]
+    }
+
+    return render_template('review_product.html', product=product, quantity=quantity)
+
+
 if __name__ == '__main__':
     # create_users_table()
     app.run(debug=True)
