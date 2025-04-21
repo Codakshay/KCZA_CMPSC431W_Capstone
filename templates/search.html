@@ -159,19 +159,21 @@
             <div class="results-container">
               <h2>Search Results</h2>
               {% for product in results %}
-                <div class="product-card">
-                    <h3>{{ product.product_name }}</h3>
-                    <p> {{ product.product }}</p>
-                    <p> ${{ product.product_price }}</p>
-                    <p>
-                        {% if product.status == 1 %}
-                            Active
-                        {% else %}
-                            Sold Out
-                    {% endif %}
-                  </p>
-                  <p>Sold by {{ product.business_name }}</p>
-                </div>
+                <a href="/product/{{product.listing_id}}">
+                    <div class="product-card">
+                        <h3>{{ product.product_name }}</h3>
+                        <p> {{ product.product }}</p>
+                        <p> ${{ product.product_price }}</p>
+                        <p>
+                            {% if product.status == 1 %}
+                                Active
+                            {% else %}
+                                Sold Out
+                        {% endif %}
+                      </p>
+                      <p>Sold by {{ product.business_name }}</p>
+                    </div>
+                </a>
               {% endfor %}
             </div>
           {% endif %}

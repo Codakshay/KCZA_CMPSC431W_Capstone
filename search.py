@@ -24,7 +24,7 @@ def search_for(keywords, min_price, max_price):
         return None
 
     query = """
-        SELECT product_name, product_price, seller_email, status
+        SELECT listing_id, product_name, product_price, seller_email, status
         FROM Listings
         WHERE (status = 1 OR status = 2)
     """
