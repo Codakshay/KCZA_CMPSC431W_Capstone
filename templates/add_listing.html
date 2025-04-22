@@ -1,50 +1,171 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Add Product Listing</title>
+    <meta charset="UTF-8">
+    <title>Add Product Listing</title>
 </head>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .container {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 40px;
+        width: 800px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .nav-bar {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .nav-bar a {
+        margin: 0 10px;
+        color: #5A67D8;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .nav-bar a:hover {
+        text-decoration: underline;
+    }
+
+    .flash-messages {
+        margin-bottom: 20px;
+        padding: 10px;
+        background-color: #E0F7FA;
+        border: 1px solid #81D4FA;
+        color: #01579B;
+        border-radius: 4px;
+    }
+
+    .flash-messages ul {
+        list-style-type: none;
+    }
+
+    form h2 {
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 1.2rem;
+    }
+
+    label {
+        display: block;
+        color: #555;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.95rem;
+    }
+
+    button[type="submit"] {
+        width: 140px;
+        padding: 10px;
+        border: none;
+        background-color: #5A67D8;
+        color: #fff;
+        font-size: 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-bottom: 20px;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #434190;
+    }
+
+    a.back-link {
+        color: #5A67D8;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    a.back-link:hover {
+        text-decoration: underline;
+    }
+</style>
 <body>
-  <h1>Add Product Listing</h1>
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <ul>
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+    <div class="container">
+        <h1>Nittany Business</h1>
+        <div class="nav-bar">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('search') }}">Search</a>
+            <a href="{{ url_for('view_category', parent_category='All') }}">Categories</a>
+            <a href="{{ url_for('seller_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('add_listing') }}">Add Listing</a>
+        </div>
 
-  <form method="post" action="{{ url_for('add_listing') }}">
-    <label for="seller_email">Seller Email:</label>
-    <input type="email" id="seller_email" name="seller_email" value="{{ session.get('email') }}" readonly>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              <ul>
+                {% for message in messages %}
+                  <li>{{ message }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% endwith %}
 
-    <label for="category">Category:</label>
-    <select id="category" name="category">
-      {% for cat in categories %}
-        <option value="{{ cat[0] }}">{{ cat[0] }}</option>
-      {% endfor %}
-    </select><br><br>
+        <form method="post" action="{{ url_for('add_listing') }}">
+            <h2>Add Product Listing</h2>
 
-    <label for="product_title">Product Title:</label>
-    <input type="text" id="product_title" name="product_title" required><br><br>
+            <label for="seller_email">Seller Email:</label>
+            <input type="email" id="seller_email" name="seller_email"
+                   value="{{ session.get('email') }}" readonly>
 
-    <label for="product_name">Product Name:</label>
-    <input type="text" id="product_name" name="product_name" required><br><br>
+            <label for="category">Category:</label>
+            <select id="category" name="category">
+              {% for cat in categories %}
+                <option value="{{ cat[0] }}">{{ cat[0] }}</option>
+              {% endfor %}
+            </select>
 
-    <label for="product_description">Product Description:</label>
-    <textarea id="product_description" name="product_description" required></textarea><br><br>
+            <label for="product_title">Product Title:</label>
+            <input type="text" id="product_title" name="product_title" required>
 
-    <label for="quantity">Quantity:</label>
-    <input type="number" id="quantity" name="quantity" required><br><br>
+            <label for="product_name">Product Name:</label>
+            <input type="text" id="product_name" name="product_name" required>
 
-    <label for="product_price">Product Price:</label>
-    <input type="text" id="product_price" name="product_price" required><br><br>
+            <label for="product_description">Product Description:</label>
+            <textarea id="product_description" name="product_description" rows="4" required></textarea>
 
-    <input type="submit" value="Add Listing">
-  </form>
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" required>
 
-  <p><a href="{{ url_for('seller_dashboard') }}">Back to Dashboard</a></p>
+            <label for="product_price">Product Price:</label>
+            <input type="text" id="product_price" name="product_price" required>
+
+            <button type="submit">Add Listing</button>
+        </form>
+
+        <p><a class="back-link" href="{{ url_for('seller_dashboard') }}">← Back to Dashboard</a></p>
+    </div>
 </body>
 </html>
