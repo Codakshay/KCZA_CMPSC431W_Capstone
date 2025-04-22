@@ -217,7 +217,7 @@ def logout():
     flash("Logged out successfully.")
     return redirect(url_for('index'))
 
-@app.route('/search', methods=["GET"])
+@app.route('/search', methods=["GET", "POST"])
 def search():
     keywords = request.args.get('keywords', '').strip()
     min_price = request.args.get('min_price', type=int)
@@ -363,6 +363,11 @@ def order_product(product_id):
         'quantity': row[4]
     }
 
+    # Get list of credit cards
+    cursor.execute("SELECT credit_card_num, owner_email FROM CreditCards")
+    cards = cursor.fetchall()
+    credit_cards = [{'credit_card_num': c[0], 'owner_email': c[1]} for c in cards]
+
     if request.method == 'POST':
         quantity_to_purchase = int(request.form.get('quantity', 0))
 
@@ -370,19 +375,22 @@ def order_product(product_id):
             conn.close()
             return f"Not enough inventory. Only {product['quantity']} left.", 400
 
-        # Update quantity
+        # Deduct quantity
         new_quantity = product['quantity'] - quantity_to_purchase
         cursor.execute("UPDATE Listings SET quantity = ? WHERE listing_id = ?", (new_quantity, product_id))
         conn.commit()
         conn.close()
 
-        # Redirect to review page, passing quantity as a query param
+        # Redirect to review page
         return redirect(url_for('review_product', product_id=product_id, quantity=quantity_to_purchase))
 
-    # GET request
     quantity = request.args.get('quantity', type=int)
     conn.close()
-    return render_template('order_product.html', product=product, product_id=product_id, quantity=quantity)
+    return render_template('order_product.html',
+                           product=product,
+                           product_id=product_id,
+                           quantity=quantity,
+                           credit_cards=credit_cards)
 
 
 @app.route('/review/<int:product_id>')

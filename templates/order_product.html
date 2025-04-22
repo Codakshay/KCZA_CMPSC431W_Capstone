@@ -138,35 +138,60 @@
     }
 </style>
 <body>
-  <p>ordering</p>
-  <div class="product-card">
-    <h2>{{ product.name }}</h2>
-    
-    <div class="product-detail">
-      <span class="label">Seller:</span> {{ product.seller_email }}
+    <div class="container">
+      <!-- "ordering" on its own line -->
+      <div style="margin-bottom: 16px;">
+        <p><strong>You are ordering the following Item:</strong></p>
+      </div>
+  
+      <!-- Product card on its own line -->
+      <div class="product-card" style="margin-bottom: 16px;">
+        <h2>{{ product.name }}</h2>
+  
+        <div class="product-detail">
+          <span class="label">Seller:</span> {{ product.seller_email }}
+        </div>
+  
+        <div class="product-detail">
+          <span class="label">Name:</span> {{ product.name }}
+        </div>
+  
+        <div class="product-detail">
+          <span class="label">Unit Price:</span> ${{ "%.2f"|format(product.price) }}
+        </div>
+  
+        <div class="product-detail">
+          <span class="label">Available Quantity:</span> {{ product.quantity }}
+        </div>
+      </div>
+  
+      <!-- Optional message -->
+      {% if message %}
+        <div style="color: green; margin-bottom: 16px;">
+          <strong>{{ message }}</strong>
+        </div>
+      {% endif %}
+  
+      <!-- Form on its own line -->
+      <form method="post" style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Hidden quantity -->
+        <input type="hidden" name="quantity" value="{{ quantity }}">
+  
+        <!-- Credit card dropdown on its own line -->
+        <div>
+          <label for="credit_card">Select a credit card:</label><br>
+          <select name="credit_card_id" id="credit_card" required>
+            {% for card in credit_cards %}
+              <option value="{{ card.id }}">{{ card.credit_card_num }}</option>
+            {% endfor %}
+          </select>
+        </div>
+  
+        <!-- Submit button on its own line -->
+        <div>
+          <button type="submit">Purchase {{ quantity }}</button>
+        </div>
+      </form>
     </div>
-    
-    <div class="product-detail">
-      <span class="label">Name:</span> {{ product.name }}
-    </div>
-    
-    <div class="product-detail">
-      <span class="label">Unit Price:</span> ${{ "%.2f"|format(product.price) }}
-    </div>
-    
-    <div class="product-detail">
-      <span class="label">Available Quantity:</span> {{ product.quantity }}
-    </div>
-  </div>
-
-  {% if message %}
-    <p style="color: green;"><strong>{{ message }}</strong></p>
-  {% endif %}
-
-  <form method="post">
-    <input type="hidden" name="quantity" value="{{ quantity }}">
-    <button type="submit">Purchase {{ quantity }}</button>
-  </form>
-
-</body>
+  </body>
 </html>

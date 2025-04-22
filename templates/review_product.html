@@ -144,10 +144,18 @@
         
         <p>Would you like to leave a review for the seller: <strong>{{ product.seller_email }}</strong>?</p>
 
-        <form method="post" action="/submit_review">
-        <input type="hidden" name="product_id" value="{{ product_id }}">
-        <textarea name="review" placeholder="Write your review here..." rows="4" cols="40"></textarea><br>
-        <button type="submit">Submit Review</button>
+        <form method="post" action="/search">
+            <input type="hidden" name="product_id" value="{{ product_id }}">
+
+            <label for="rating">Rating (1-5):</label><br>
+            <select name="rating" id="rating" required>
+                <option value="">Select rating</option>
+                {% for i in range(1, 6) %}
+                    <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
+            </select><br><br>
+            
+            <button type="submit">Submit Review</button>
         </form>
     </div>
 </body>
