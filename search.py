@@ -49,7 +49,7 @@ def search_for(keywords, min_price, max_price):
         params.append(max_price)
 
     if len(matching_seller_emails) > 0:
-        query += f" OR seller_email IN ({", ".join(["?"] * len(matching_seller_emails))})"
+        query += f" OR seller_email IN ({', '.join(['?'] * len(matching_seller_emails))})"
         params.extend(matching_seller_emails)
 
     conn = sqlite3.connect(DATABASE)
