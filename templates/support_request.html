@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Submit HelpDesk Request</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 400px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+    input[type="submit"] {
+      background-color: #5A67D8;
+      color: white;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    input[type="submit"]:hover {
+      background-color: #434190;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>HelpDesk Request</h2>
+    <form method="post">
+      <label for="description">Describe your issue or request:</label><br>
+      <textarea name="description" rows="6" required></textarea>
+      <input type="submit" value="Submit Request">
+    </form>
+  </div>
+</body>
+</html>
