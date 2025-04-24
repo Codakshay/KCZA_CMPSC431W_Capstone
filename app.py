@@ -437,6 +437,17 @@ def order_product(product_id):
         'quantity': row[4]
     }
 
+    # Get current buyer's email from session
+    buyer_email = session.get('email')
+    if not buyer_email:
+        conn.close()
+        return "User not logged in", 403
+
+    # Get list of credit cards owned by the buyer
+    cursor.execute("SELECT owner_email, credit_card_num FROM CreditCards WHERE owner_email = ?", (buyer_email,))
+    cards = cursor.fetchall()
+    credit_cards = [{'id': c[0], 'credit_card_num': c[1]} for c in cards]
+
     if request.method == 'POST':
         quantity_to_purchase = int(request.form.get('quantity', 0))
 
@@ -444,7 +455,7 @@ def order_product(product_id):
             conn.close()
             return f"Not enough inventory. Only {product['quantity']} left.", 400
 
-        # Update quantity
+        # Deduct quantity
         new_quantity = product['quantity'] - quantity_to_purchase
         cursor.execute("UPDATE Listings SET quantity = ? WHERE listing_id = ?", (new_quantity, product_id))
         conn.commit()
@@ -453,11 +464,13 @@ def order_product(product_id):
         # Redirect to review page, passing quantity as a query param
         return redirect(url_for('review_product', product_id=product_id, quantity=quantity_to_purchase))
 
-    # GET request
     quantity = request.args.get('quantity', type=int)
     conn.close()
-    return render_template('order_product.html', product=product, product_id=product_id, quantity=quantity)
-
+    return render_template('order_product.html',
+                           product=product,
+                           product_id=product_id,
+                           quantity=quantity,
+                           credit_cards=credit_cards)
 
 @app.route('/review/<int:product_id>')
 def review_product(product_id):
