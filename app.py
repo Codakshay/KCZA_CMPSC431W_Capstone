@@ -394,15 +394,22 @@ def support_request():
 
     return render_template('support_request.html')
 
+def get_business_email(name):
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor = conn.execute("SELECT email FROM Sellers WHERE business_name = ?", (name,))
+    result = cursor.fetchone()
+    conn.close()
+    return result['email'] if result else "Unknown Seller"
 
-
-
-@app.route('/product/<int:product_id>')
-def show_product(product_id):
+@app.route('/product/<string:seller_name>/<int:product_id>')
+def show_product(seller_name, product_id):
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
+    seller_email = get_business_email(seller_name)
     cursor.execute("""SELECT product_name, product_price, seller_email, status, quantity
-    FROM Listings WHERE listing_id = ?""", (product_id,))
+    FROM Listings WHERE listing_id = ? AND seller_email = ?""", (product_id,seller_email,))
     row = cursor.fetchone()
 
     if row:
@@ -411,7 +418,7 @@ def show_product(product_id):
             'price': row[1],
             'seller_email': row[2],
             'status': row[3],
-            'quantity': row[4]
+            'quantity': row[4],
         }
         return render_template('product.html', product=product, product_id=product_id)
     else:

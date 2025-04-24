@@ -163,7 +163,7 @@
             <div class="results-container">
               <h2>Search Results</h2>
               {% for product in results %}
-                <a href="/product/{{product.listing_id}}">
+                <a href="/product/{{product.business_name}}/{{product.listing_id}}">
                     <div class="product-card">
                         <h3>{{ product.product_name }}</h3>
                         <p> {{ product.product }}</p>
