@@ -436,8 +436,19 @@ def order_product(product_id):
     cursor = conn.cursor()
 
     # Get product info
-    cursor.execute("""SELECT product_name, product_price, seller_email, status, quantity
-                      FROM Listings WHERE listing_id = ?""", (product_id,))
+    cursor.execute("""
+    SELECT 
+        Listings.product_name, 
+        Listings.product_price, 
+        Listings.seller_email, 
+        Listings.Product_Description,
+        Listings.status, 
+        Listings.quantity,
+        Sellers.business_name
+    FROM Listings
+    JOIN Sellers ON Listings.seller_email = Sellers.email
+    WHERE Listings.listing_id = ?
+""", (product_id,))
     row = cursor.fetchone()
 
     if not row:
@@ -448,8 +459,10 @@ def order_product(product_id):
         'name': row[0],
         'price': row[1],
         'seller_email': row[2],
-        'status': row[3],
-        'quantity': row[4]
+        'description': row[3],
+        'status': row[4],
+        'quantity': row[5],
+        'business_name': row[6]
     }
 
 
