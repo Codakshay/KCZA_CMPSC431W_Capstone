@@ -54,6 +54,32 @@ def register_user(email: str, password: str, role: str) -> bool:
     finally:
         conn.close()
 
+def register_user_multi_roles(email: str, password: str, roles: list) -> bool:
+    hashed_pwd = hash_password(password)
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("INSERT INTO users (email, hashed_password) VALUES (?, ?)", (email, hashed_pwd))
+    except sqlite3.IntegrityError:
+        # User exists, continue adding roles if needed
+        pass
+
+    try:
+        for role in roles:
+            if role == 'Buyer':
+                cursor.execute("INSERT OR IGNORE INTO buyers (email) VALUES (?)", (email,))
+            elif role == 'Seller':
+                cursor.execute("INSERT OR IGNORE INTO sellers (email) VALUES (?)", (email,))
+            else:
+                continue  # Ignore unknown roles
+        conn.commit()
+        return True
+    except sqlite3.Error:
+        return False
+    finally:
+        conn.close()
+
 # makes sure the users email and password are correct and in the Users table
 def authenticate_user(email: str, password: str) -> bool:
     hashed_input = hash_password(password)
@@ -95,23 +121,27 @@ def submit_email_change_request(current_email: str, new_email: str) -> bool:
         conn.close()
 
 
-def get_user_role(email: str) -> str:
+def get_user_role(email: str) -> list:
+    """Return a list of roles assigned to the user."""
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
+    roles = []
 
     cursor.execute("SELECT 1 FROM buyers WHERE email = ?", (email,))
     if cursor.fetchone():
-        return 'Buyer'
+        roles.append("Buyer")
 
     cursor.execute("SELECT 1 FROM sellers WHERE email = ?", (email,))
     if cursor.fetchone():
-        return 'Seller'
+        roles.append("Seller")
 
     cursor.execute("SELECT 1 FROM helpdesk WHERE email = ?", (email,))
     if cursor.fetchone():
-        return 'HelpDesk'
+        roles.append("HelpDesk")
 
-    return 'Unknown'
+    conn.close()
+    return roles
+
 
 def generate_listing_id(seller_email):
     """Generate a unique Listing_ID for the given seller."""
@@ -132,13 +162,20 @@ def index():
 def register():
     email = request.form.get('email')
     password = request.form.get('password')
-    role = request.form.get('role')
+    roles = request.form.getlist('roles')  # allows selecting multiple roles
 
-    if register_user(email, password, role):
-        flash(f"Registration successful as {role}. You can now log in.")
+    if 'HelpDesk' in roles:
+        flash("HelpDesk registration is restricted.")
+        return redirect(url_for('index'))
+
+    success = register_user_multi_roles(email, password, roles)
+    if success:
+        session['email'] = email  # Automatically log in the user
+        flash(f"Registration successful as {', '.join(roles)}.")
+        return redirect(url_for('profile'))  # Redirect to profile
     else:
-        flash("Registration failed. Email might already exist or HelpDesk access is restricted.")
-    return redirect(url_for('index'))
+        flash("Registration failed. Email might already exist.")
+        return redirect(url_for('index'))
 
 from flask import session
 @app.route('/profile', methods=['GET', 'POST'])
@@ -192,19 +229,8 @@ def login():
 
     if authenticate_user(email, password):
         session['email'] = email
-        role = get_user_role(email)
-
-        flash(f"Login successful as {role}!")
-
-        if role == 'Buyer':
-            return redirect(url_for('search'))
-        elif role == 'Seller':
-            return redirect(url_for('profile'))  # or a dedicated seller page
-        elif role == 'HelpDesk':
-            return redirect(url_for('profile'))  # or a HelpDesk dashboard
-        else:
-            flash("Unknown role. Redirecting to profile.")
-            return redirect(url_for('profile'))
+        flash("Login successful!")
+        return redirect(url_for('profile'))
     else:
         flash("Invalid email or password.")
         return redirect(url_for('index'))
@@ -265,7 +291,7 @@ def add_listing():
         return redirect(url_for("index"))
     email = session["email"]
     role = get_user_role(email)
-    if role != "Seller":
+    if "Seller" not in role:
         flash("Access restricted: Only sellers can add listings.")
         return redirect(url_for("index"))
 
@@ -302,13 +328,15 @@ def add_listing():
 @app.route('/seller/dashboard')
 def seller_dashboard():
     if "email" not in session:
-        flash("Please log in as a seller.")
+        flash("Please log in.")
         return redirect(url_for("index"))
+
     email = session["email"]
-    role = get_user_role(email)
-    if role != "Seller":
-        flash("Access restricted: Only sellers can view the dashboard.")
+    roles = get_user_role(email)
+    if 'Seller' not in roles:
+        flash("Access restricted: Seller role required.")
         return redirect(url_for("index"))
+
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     cursor.execute("""
@@ -318,7 +346,53 @@ def seller_dashboard():
     """, (email,))
     listings = cursor.fetchall()
     conn.close()
-    return render_template("seller_dashboard.html", listings=listings)
+    return render_template("seller_dashboard.html", listings=listings, roles=roles)
+
+
+@app.route('/buyer/dashboard')
+def buyer_dashboard():
+    if "email" not in session:
+        flash("Please log in.")
+        return redirect(url_for("index"))
+
+    email = session["email"]
+    roles = get_user_role(email)
+    if 'Buyer' not in roles:
+        flash("Access restricted: Buyer role required.")
+        return redirect(url_for("index"))
+
+    # Dummy order data — replace with real DB queries
+    orders = [
+    ]
+    return render_template("buyer_dashboard.html", orders=orders, roles=roles)
+
+
+@app.route('/support_request', methods=['GET', 'POST'])
+def support_request():
+    if 'email' not in session:
+        flash("Please log in to submit a support request.")
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        description = request.form.get('description')
+        email = session['email']
+
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO requests (sender_email, request_desc)
+            VALUES (?, ?)
+        ''', (email, description))
+        conn.commit()
+        conn.close()
+
+        flash("Support request submitted to HelpDesk.")
+        return redirect(url_for('profile'))
+
+    return render_template('support_request.html')
+
+
+
 
 @app.route('/product/<int:product_id>')
 def show_product(product_id):
