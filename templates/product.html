@@ -141,7 +141,7 @@
   <div class="container">
     
   <h2 style="text-align: left; margin-bottom: 24px; color: #333;">
-    You're purchasing the product below
+    You are purchasing the product below
   </h2>
 
     <!-- Product card on its own line -->
@@ -149,11 +149,7 @@
       <h2>{{ product.name }}</h2>
       
       <div class="product-detail">
-        <span class="label">Seller:</span> {{ product.seller_email }}
-      </div>
-      
-      <div class="product-detail">
-        <span class="label">Name:</span> {{ product.name }}
+        <span class="label">Seller:</span> {{ product.business_name }}
       </div>
       
       <div class="product-detail">
@@ -162,6 +158,10 @@
       
       <div class="product-detail">
         <span class="label">Available Quantity:</span> {{ product.quantity }}
+      </div>
+
+      <div class="product-detail">
+        <span class="label">Product Description:</span> {{ product.description }}
       </div>
     </div>
 
