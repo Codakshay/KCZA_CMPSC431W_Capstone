@@ -394,22 +394,26 @@ def support_request():
 
     return render_template('support_request.html')
 
-def get_business_email(name):
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor = conn.execute("SELECT email FROM Sellers WHERE business_name = ?", (name,))
-    result = cursor.fetchone()
-    conn.close()
-    return result['email'] if result else "Unknown Seller"
 
-@app.route('/product/<string:seller_name>/<int:product_id>')
-def show_product(seller_name, product_id):
+
+
+@app.route('/product/<int:product_id>')
+def show_product(product_id):
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    seller_email = get_business_email(seller_name)
-    cursor.execute("""SELECT product_name, product_price, seller_email, status, quantity
-    FROM Listings WHERE listing_id = ? AND seller_email = ?""", (product_id,seller_email,))
+    cursor.execute("""
+    SELECT 
+        Listings.product_name, 
+        Listings.product_price, 
+        Listings.seller_email, 
+        Listings.Product_Description,
+        Listings.status, 
+        Listings.quantity,
+        Sellers.business_name
+    FROM Listings
+    JOIN Sellers ON Listings.seller_email = Sellers.email
+    WHERE Listings.listing_id = ?
+""", (product_id,))
     row = cursor.fetchone()
 
     if row:
@@ -417,13 +421,14 @@ def show_product(seller_name, product_id):
             'name': row[0],
             'price': row[1],
             'seller_email': row[2],
-            'status': row[3],
-            'quantity': row[4],
+            'description': row[3],
+            'status': row[4],
+            'quantity': row[5],
+            'business_name': row[6]
         }
         return render_template('product.html', product=product, product_id=product_id)
     else:
         return "Product not found", 404
-
 
 @app.route('/order/<int:product_id>', methods=['GET', 'POST'])
 def order_product(product_id):
@@ -431,8 +436,19 @@ def order_product(product_id):
     cursor = conn.cursor()
 
     # Get product info
-    cursor.execute("""SELECT product_name, product_price, seller_email, status, quantity
-                      FROM Listings WHERE listing_id = ?""", (product_id,))
+    cursor.execute("""
+    SELECT 
+        Listings.product_name, 
+        Listings.product_price, 
+        Listings.seller_email, 
+        Listings.Product_Description,
+        Listings.status, 
+        Listings.quantity,
+        Sellers.business_name
+    FROM Listings
+    JOIN Sellers ON Listings.seller_email = Sellers.email
+    WHERE Listings.listing_id = ?
+""", (product_id,))
     row = cursor.fetchone()
 
     if not row:
@@ -443,8 +459,10 @@ def order_product(product_id):
         'name': row[0],
         'price': row[1],
         'seller_email': row[2],
-        'status': row[3],
-        'quantity': row[4]
+        'description': row[3],
+        'status': row[4],
+        'quantity': row[5],
+        'business_name': row[6]
     }
 
 

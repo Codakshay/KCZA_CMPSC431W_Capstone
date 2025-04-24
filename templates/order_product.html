@@ -141,7 +141,7 @@
     <div class="container">
       <!-- "ordering" on its own line -->
       <div style="margin-bottom: 16px;">
-        <p><strong>You are ordering the following Item:</strong></p>
+        <h2><strong>You are ordering the following Item:</strong></h2>
       </div>
   
       <!-- Product card on its own line -->
@@ -149,19 +149,19 @@
         <h2>{{ product.name }}</h2>
   
         <div class="product-detail">
-          <span class="label">Seller:</span> {{ product.seller_email }}
+          <span class="label">Seller:</span> {{ product.business_name }}
         </div>
-  
-        <div class="product-detail">
-          <span class="label">Name:</span> {{ product.name }}
-        </div>
-  
+        
         <div class="product-detail">
           <span class="label">Unit Price:</span> ${{ "%.2f"|format(product.price) }}
         </div>
-  
+        
         <div class="product-detail">
           <span class="label">Available Quantity:</span> {{ product.quantity }}
+        </div>
+  
+        <div class="product-detail">
+          <span class="label">Product Description:</span> {{ product.description }}
         </div>
       </div>
   
@@ -186,6 +186,7 @@
             {% endfor %}
           </select>
         </div>
+        <h3>Total Amount: ${{ "%.2f"|format(product.price * quantity) }}</h3>
   
         <!-- Submit button on its own line -->
         <div>
