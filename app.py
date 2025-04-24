@@ -437,12 +437,12 @@ def order_product(product_id):
         'quantity': row[4]
     }
 
-<<<<<<< HEAD
+
     # Get list of credit cards
     cursor.execute("SELECT credit_card_num, owner_email FROM CreditCards")
     cards = cursor.fetchall()
     credit_cards = [{'credit_card_num': c[0], 'owner_email': c[1]} for c in cards]
-=======
+
     # Get current buyer's email from session
     buyer_email = session.get('email')
     if not buyer_email:
@@ -453,7 +453,6 @@ def order_product(product_id):
     cursor.execute("SELECT owner_email, credit_card_num FROM CreditCards WHERE owner_email = ?", (buyer_email,))
     cards = cursor.fetchall()
     credit_cards = [{'id': c[0], 'credit_card_num': c[1]} for c in cards]
->>>>>>> 56eac2d50efe019313088883f65588a22d55110b
 
     if request.method == 'POST':
         quantity_to_purchase = int(request.form.get('quantity', 0))
@@ -478,10 +477,6 @@ def order_product(product_id):
                            product_id=product_id,
                            quantity=quantity,
                            credit_cards=credit_cards)
-<<<<<<< HEAD
-
-=======
->>>>>>> 56eac2d50efe019313088883f65588a22d55110b
 
 @app.route('/review/<int:product_id>')
 def review_product(product_id):
