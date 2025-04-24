@@ -154,9 +154,12 @@ def generate_listing_id(seller_email):
 
 @app.route('/')
 def index():
+    try:
+        if session['email']:
+            return redirect(url_for('profile'))
+    except:
+        pass
     return render_template('index.html')
-
-
 
 @app.route('/register', methods=['POST'])
 def register():
