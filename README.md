@@ -22,7 +22,7 @@ This project is a simple Flask application that provides a single-page interface
 
    ```bash
    git clone https://github.com/Codakshay/KCZA_CMPSC431W_Capstone.git
-   cd NittanyBusinessTest
+   cd KCZA_CMPSC431W_Capstone
    
 2. **Set up virtual environment and install dependencies**
     ```bash
