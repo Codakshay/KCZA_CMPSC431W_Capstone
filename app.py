@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 import hashlib
+import random
+import string
 
 import search as s
 
@@ -54,7 +56,7 @@ def hash_password(password: str) -> str:
 #     finally:
 #         conn.close()Buyers
 
-def register_user_multi_roles(email: str, password: str, business_name: str, bank_routing_number: str, bank_account_number: str, roles: list) -> bool:
+def register_user_multi_roles(email: str, password: str, business_name: str, address_id: str, bank_routing_number: str, bank_account_number: str, roles: list) -> bool:
     hashed_pwd = hash_password(password)
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -68,9 +70,9 @@ def register_user_multi_roles(email: str, password: str, business_name: str, ban
     try:                  
         for role in roles:
             if role == 'Buyer':
-                cursor.execute("INSERT INTO buyers (email, business_name) VALUES (?,?)", (email, business_name))
+                cursor.execute("INSERT INTO buyers (email, business_name, buyer_address_id) VALUES (?,?,?)", (email, business_name, address_id))
             elif role == 'Seller':
-                cursor.execute("INSERT INTO sellers (email, business_name, bank_routing_number, bank_account_number, balance) VALUES (?,?,?,?)", (email, business_name, bank_routing_number, bank_account_number, 0))
+                cursor.execute("INSERT INTO sellers (email, business_name, business_address_id, bank_routing_number, bank_account_number, balance) VALUES (?,?,?,?,?,?)", (email, business_name, address_id, bank_routing_number, bank_account_number, 0))
             else:
                 continue  # Ignore unknown roles
         conn.commit()
@@ -167,14 +169,40 @@ def register():
     password = request.form.get('password')
     roles = request.form.getlist('roles')  # allows selecting multiple roles
     business_name = request.form.get('business_name')
+    street_num = request.form.get('street_num')
+    street_name = request.form.get('street_name')
+    zipcode = request.form.get('zipcode')
     bank_routing_number = request.form.get('bank_routing_number')
     bank_account_number = request.form.get('bank_account_number')
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    # check for valid zipcode
+    cursor.execute("SELECT zipcode FROM ZipcodeInfo WHERE zipcode = ?", (zipcode,))
+    if not cursor.fetchone():
+        flash("Invalid Zipcode")
+        conn.close()
+        return redirect(url_for('index'))
+
+    # add address
+    address_id = ""
+    # create a new random id that matches the format of the given ids
+    while True:
+        address_id = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        cursor.execute("SELECT * FROM Addresses WHERE address_id = ?", (address_id,))
+        if not cursor.fetchone():
+            break
+    cursor.execute("INSERT INTO Addresses (address_id, zipcode, street_num, street_name) VALUES (?,?,?,?)", (address_id,zipcode,street_num,street_name))
+    conn.commit()
+
+    conn.close()
 
     if 'HelpDesk' in roles:
         flash("HelpDesk registration is restricted.")
         return redirect(url_for('index'))
 
-    success = register_user_multi_roles(email, password, business_name, bank_routing_number, bank_account_number, roles)
+    success = register_user_multi_roles(email, password, business_name, address_id, bank_routing_number, bank_account_number, roles)
     if success:
         session['email'] = email  # Automatically log in the user
         flash(f"Registration successful as {', '.join(roles)}.")
@@ -183,7 +211,6 @@ def register():
         flash("Registration failed. Email might already exist.")
         return redirect(url_for('index'))
 
-from flask import session
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
     if 'email' not in session:
