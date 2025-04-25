@@ -27,34 +27,34 @@ def hash_password(password: str) -> str:
 #     conn.close()
 
 # inserts a new user into the User table, returns true on success
-def register_user(email: str, password: str, role: str) -> bool:
-    """Register a new user and assign a role in a separate table."""
-    if role == 'HelpDesk':
-        return False  # Block public HelpDesk registration
+# def register_user(email: str, password: str, role: str) -> bool:
+#     """Register a new user and assign a role in a separate table."""
+#     if role == 'HelpDesk':
+#         return False  # Block public HelpDesk registration
+#
+#     hashed_pwd = hash_password(password)
+#     conn = sqlite3.connect(DATABASE)
+#     cursor = conn.cursor()
+#
+#     try:
+#         cursor.execute("INSERT INTO users (email, hashed_password) VALUES (?, ?)", (email, hashed_pwd))
+#
+#         if role == 'Buyer':
+#             cursor.execute("INSERT INTO buyers (email) VALUES (?)", (email,))
+#         elif role == 'Seller':
+#             cursor.execute("INSERT INTO sellers (email) VALUES (?)", (email,))
+#         else:
+#             return False  # Unknown role
+#
+#         conn.commit()
+#         return True
+#
+#     except sqlite3.IntegrityError:
+#         return False  # Email already exists
+#     finally:
+#         conn.close()Buyers
 
-    hashed_pwd = hash_password(password)
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("INSERT INTO users (email, hashed_password) VALUES (?, ?)", (email, hashed_pwd))
-
-        if role == 'Buyer':
-            cursor.execute("INSERT INTO buyers (email) VALUES (?)", (email,))
-        elif role == 'Seller':
-            cursor.execute("INSERT INTO sellers (email) VALUES (?)", (email,))
-        else:
-            return False  # Unknown role
-
-        conn.commit()
-        return True
-
-    except sqlite3.IntegrityError:
-        return False  # Email already exists
-    finally:
-        conn.close()
-
-def register_user_multi_roles(email: str, password: str, roles: list) -> bool:
+def register_user_multi_roles(email: str, password: str, business_name: str, bank_routing_number: str, bank_account_number: str, roles: list) -> bool:
     hashed_pwd = hash_password(password)
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -65,20 +65,20 @@ def register_user_multi_roles(email: str, password: str, roles: list) -> bool:
         # User exists, continue adding roles if needed
         pass
 
-    try:
+    try:                  
         for role in roles:
             if role == 'Buyer':
-                cursor.execute("INSERT OR IGNORE INTO buyers (email) VALUES (?)", (email,))
+                cursor.execute("INSERT INTO buyers (email, business_name) VALUES (?,?)", (email, business_name))
             elif role == 'Seller':
-                cursor.execute("INSERT OR IGNORE INTO sellers (email) VALUES (?)", (email,))
+                cursor.execute("INSERT INTO sellers (email, business_name, bank_routing_number, bank_account_number, balance) VALUES (?,?,?,?)", (email, business_name, bank_routing_number, bank_account_number, 0))
             else:
                 continue  # Ignore unknown roles
         conn.commit()
+        conn.close()
         return True
     except sqlite3.Error:
-        return False
-    finally:
         conn.close()
+        return False
 
 # makes sure the users email and password are correct and in the Users table
 def authenticate_user(email: str, password: str) -> bool:
@@ -166,12 +166,15 @@ def register():
     email = request.form.get('email')
     password = request.form.get('password')
     roles = request.form.getlist('roles')  # allows selecting multiple roles
+    business_name = request.form.get('business_name')
+    bank_routing_number = request.form.get('bank_routing_number')
+    bank_account_number = request.form.get('bank_account_number')
 
     if 'HelpDesk' in roles:
         flash("HelpDesk registration is restricted.")
         return redirect(url_for('index'))
 
-    success = register_user_multi_roles(email, password, roles)
+    success = register_user_multi_roles(email, password, business_name, bank_routing_number, bank_account_number, roles)
     if success:
         session['email'] = email  # Automatically log in the user
         flash(f"Registration successful as {', '.join(roles)}.")

@@ -17,6 +17,8 @@ df = df[['email', 'hashed_password']] # replaces the password column with the ha
 conn = sqlite3.connect(database)
 cursor = conn.cursor()
 
+cursor.execute(f"DELETE FROM {table}")
+
 for _, row in df.iterrows(): # inserts the email and hashed_password for each row
     cursor.execute(f" INSERT INTO {table} (email, hashed_password) VALUES (?, ?)", (row['email'], row['hashed_password']))
 
