@@ -394,11 +394,17 @@ def support_request():
 
     return render_template('support_request.html')
 
+def get_business_email(name):
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor = conn.execute("SELECT email FROM Sellers WHERE business_name = ?", (name,))
+    result = cursor.fetchone()
+    conn.close()
+    return result['email'] if result else "Unknown Seller"
 
-
-
-@app.route('/product/<int:product_id>')
-def show_product(product_id):
+@app.route('/product/<string:seller_name>/<int:product_id>')
+def show_product(seller_name, product_id):
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     cursor.execute("""
@@ -408,10 +414,8 @@ def show_product(product_id):
         Listings.seller_email, 
         Listings.Product_Description,
         Listings.status, 
-        Listings.quantity,
-        Sellers.business_name
+        Listings.quantity
     FROM Listings
-    JOIN Sellers ON Listings.seller_email = Sellers.email
     WHERE Listings.listing_id = ?
 """, (product_id,))
     row = cursor.fetchone()
@@ -424,12 +428,11 @@ def show_product(product_id):
             'description': row[3],
             'status': row[4],
             'quantity': row[5],
-            'business_name': row[6]
+            'business_name': seller_name
         }
         return render_template('product.html', product=product, product_id=product_id)
     else:
         return "Product not found", 404
-
 @app.route('/order/<int:product_id>', methods=['GET', 'POST'])
 def order_product(product_id):
     conn = sqlite3.connect(DATABASE)
@@ -483,20 +486,48 @@ def order_product(product_id):
     credit_cards = [{'id': c[0], 'credit_card_num': c[1]} for c in cards]
 
     if request.method == 'POST':
-        quantity_to_purchase = int(request.form.get('quantity', 0))
+        if 'add_card' in request.form:
+            new_card = request.form.get('new_credit_card', '').strip()
+            if not new_card.isdigit() or len(new_card) != 16:
+                flash("Credit card must be exactly 16 digits.", "error")
+            else:
+                # Insert new card into CreditCards table
+                #cursor.execute("""
+                #    INSERT INTO CreditCards (credit_card_num, owner_email)
+                #    VALUES (?, ?)
+                #""", (new_card, buyer_email))
+                #conn.commit()
+                flash("Credit card added successfully!", "success")
 
-        if quantity_to_purchase > product['quantity']:
+            # Refresh credit cards after insert
+            cursor.execute("SELECT rowid, credit_card_num FROM CreditCards WHERE owner_email = ?", (buyer_email,))
+            cards = cursor.fetchall()
+            credit_cards = [{'id': c[0], 'credit_card_num': c[1]} for c in cards]
+
+        elif 'purchase' in request.form:
+            quantity_to_purchase = int(request.form.get('quantity', 0))
+
+            if quantity_to_purchase > product['quantity']:
+                conn.close()
+                return f"Not enough inventory. Only {product['quantity']} left.", 400
+
+            new_quantity = product['quantity'] - quantity_to_purchase
+            cursor.execute("UPDATE Listings SET quantity = ? WHERE listing_id = ?", (new_quantity, product_id))
+
+            if new_quantity == 0:
+                cursor.execute("UPDATE Listings SET status = 0 WHERE listing_id = ?", (product_id,))
+
+            total_sale_amount = product['price'] * quantity_to_purchase
+            cursor.execute("""
+                UPDATE Sellers 
+                SET balance = balance + ? 
+                WHERE email = ?
+            """, (total_sale_amount, product['seller_email']))
+
+            conn.commit()
             conn.close()
-            return f"Not enough inventory. Only {product['quantity']} left.", 400
 
-        # Deduct quantity
-        new_quantity = product['quantity'] - quantity_to_purchase
-        cursor.execute("UPDATE Listings SET quantity = ? WHERE listing_id = ?", (new_quantity, product_id))
-        conn.commit()
-        conn.close()
-
-        # Redirect to review page
-        return redirect(url_for('review_product', product_id=product_id, quantity=quantity_to_purchase))
+            return redirect(url_for('review_product', product_id=product_id, quantity=quantity_to_purchase))
 
     quantity = request.args.get('quantity', type=int)
     conn.close()
@@ -505,7 +536,6 @@ def order_product(product_id):
                            product_id=product_id,
                            quantity=quantity,
                            credit_cards=credit_cards)
-
 @app.route('/review/<int:product_id>')
 def review_product(product_id):
     quantity = request.args.get('quantity', type=int)

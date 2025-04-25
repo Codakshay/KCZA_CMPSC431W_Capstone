@@ -186,13 +186,22 @@
             {% endfor %}
           </select>
         </div>
-        <h3>Total Amount: ${{ "%.2f"|format(product.price * quantity) }}</h3>
-  
-        <!-- Submit button on its own line -->
+      
+        <!-- New credit card input -->
         <div>
-          <button type="submit">Purchase {{ quantity }}</button>
+          <label for="new_credit_card">Add a new credit card (do not include any dashes, only numbers):</label><br>
+          <input type="text" name="new_credit_card" id="new_credit_card" pattern="\d{16}" maxlength="16" placeholder="Enter 16-digit card number">
+          <button type="submit" name="add_card" value="1">Add Credit Card</button>
+        </div>
+      
+        <h3>Total Amount: ${{ "%.2f"|format(product.price * quantity) }}</h3>
+      
+        <!-- Submit purchase -->
+        <div>
+          <button type="submit" name="purchase" value="1">Purchase {{ quantity }}</button>
         </div>
       </form>
+      
     </div>
   </body>
 </html>
