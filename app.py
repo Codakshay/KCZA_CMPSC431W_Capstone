@@ -271,8 +271,8 @@ def view_category(parent_category):
     products = []
     if query_category != "Root":
         cursor.execute(
-            "SELECT Seller_Email, Listing_ID, Product_Title, Product_Price FROM Listings WHERE Category = ? AND Status = 1",
-            (query_category,))
+            #"SELECT Seller_Email, Listing_ID, Product_Title, Product_Price FROM Listings WHERE Category = ? AND Status = 1",
+            "SELECT Listings.Seller_Email, Listings.Listing_ID, Listings.Product_Name, Listings.Product_Price, Sellers.business_name FROM Listings, Sellers WHERE Listings.Category = ? AND Listings.Status = 1 AND Listings.seller_email = Sellers.email", (query_category,))
         products = cursor.fetchall()
     conn.close()
 

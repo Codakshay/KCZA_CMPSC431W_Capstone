@@ -155,10 +155,10 @@
             {% if products %}
               <h2>Products in {{ parent_category }}</h2>
               {% for product in products %}
-                <a href="/product/{{ product[5] }}/{{ product[1] }}">
+                <a href="/product/{{ product[4] }}/{{ product[1] }}">
                   <div class="product-card">
                     <h3>{{ product[2] }}</h3>
-                    <p><strong>Seller:</strong> {{ product[0] }}</p>
+                    <p><strong>Seller:</strong> {{ product[4] }}</p>
                     <p><strong>Price:</strong> ${{ product[3] }}</p>
                   </div>
                 </a>
