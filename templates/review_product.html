@@ -144,9 +144,9 @@
         
         <p>Would you like to leave a review for the seller: <strong>{{ product.seller_email }}</strong>?</p>
 
-        <form method="post" action="/search">
+        <form method="post">
             <input type="hidden" name="product_id" value="{{ product_id }}">
-
+        
             <label for="rating">Rating (1-5):</label><br>
             <select name="rating" id="rating" required>
                 <option value="">Select rating</option>
@@ -155,6 +155,9 @@
                 {% endfor %}
             </select><br><br>
             
+            <label for="review_desc">Review:</label><br>
+            <textarea name="review_desc" id="review_desc" rows="4" placeholder="Write your detailed review here..." required></textarea><br><br>
+        
             <button type="submit">Submit Review</button>
         </form>
     </div>

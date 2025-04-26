@@ -3,7 +3,7 @@ import sqlite3
 import hashlib
 import random
 import string
-
+from datetime import datetime
 import search as s
 
 app = Flask(__name__)
@@ -463,6 +463,18 @@ def show_product(seller_name, product_id):
         return render_template('product.html', product=product, product_id=product_id)
     else:
         return "Product not found", 404
+    
+
+
+def generate_order_id():
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT MAX(Order_ID) FROM Orders ")
+    result = cursor.fetchone()[0]
+    conn.close()
+    return 1 if result is None else result + 1
+
+
 @app.route('/order/<int:product_id>', methods=['GET', 'POST'])
 def order_product(product_id):
     conn = sqlite3.connect(DATABASE)
@@ -477,7 +489,8 @@ def order_product(product_id):
         Listings.Product_Description,
         Listings.status, 
         Listings.quantity,
-        Sellers.business_name
+        Sellers.business_name,
+        Listings.Listing_ID
     FROM Listings
     JOIN Sellers ON Listings.seller_email = Sellers.email
     WHERE Listings.listing_id = ?
@@ -495,7 +508,8 @@ def order_product(product_id):
         'description': row[3],
         'status': row[4],
         'quantity': row[5],
-        'business_name': row[6]
+        'business_name': row[6],
+        'listing_id': row[7]
     }
 
 
@@ -524,33 +538,18 @@ def order_product(product_id):
             expire_year = request.form.get('expire_year', '').strip()
             security_code = request.form.get('security_code', '').strip()
 
-            # Basic validation
-            if not (new_card.isdigit() and len(new_card) == 16):
-                flash("Credit card must be exactly 16 digits.", "error")
-            elif not card_type:
-                flash("Card type is required.", "error")
-            elif not (expire_month.isdigit() and 1 <= int(expire_month) <= 12):
-                flash("Invalid expiration month.", "error")
-            elif not (expire_year.isdigit() and 2025 <= int(expire_year) <= 2035):
-                flash("Invalid expiration year.", "error")
-            elif not (security_code.isdigit() and len(security_code) in [3, 4]):
-                flash("Security code must be 3 or 4 digits.", "error")
-            else:
-                formatted_card = '-'.join(new_card[i:i+4] for i in range(0, 16, 4))
+            formatted_card = '-'.join(new_card[i:i+4] for i in range(0, 16, 4))
             # Check if card already exists
             cursor.execute("SELECT 1 FROM CreditCards WHERE credit_card_num = ?", (formatted_card,))
             existing_card = cursor.fetchone()
 
-            if existing_card:
-                flash("This credit card is already registered.", "error")
-            else:
-                # Insert into CreditCards table
-                cursor.execute("""
-                    INSERT INTO CreditCards (credit_card_num, card_type, expire_month, expire_year, security_code, owner_email)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (formatted_card, card_type, expire_month, expire_year, security_code, buyer_email))
-                conn.commit()
-                flash("Credit card added successfully!", "success")
+
+            # Insert into CreditCards table
+            cursor.execute("""
+                INSERT INTO CreditCards (credit_card_num, card_type, expire_month, expire_year, security_code, owner_email)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (formatted_card, card_type, expire_month, expire_year, security_code, buyer_email))
+            conn.commit()
 
             # Refresh credit cards after insert
             cursor.execute("SELECT rowid, credit_card_num FROM CreditCards WHERE owner_email = ?", (buyer_email,))
@@ -577,10 +576,17 @@ def order_product(product_id):
                 WHERE email = ?
             """, (total_sale_amount, product['seller_email']))
 
+            order_id= generate_order_id()
+
+            cursor.execute("""
+                INSERT INTO Orders (order_id, seller_email, listing_id, buyer_email, date, quantity, payment)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (order_id, product['seller_email'], product['listing_id'], buyer_email, datetime.now().strftime("%Y/%m/%d"),quantity_to_purchase,total_sale_amount))
+            
             conn.commit()
             conn.close()
 
-            return redirect(url_for('review_product', product_id=product_id, quantity=quantity_to_purchase))
+            return redirect(url_for('review_product', product_id=product_id, quantity=quantity_to_purchase, order_id=order_id))
         
 
 
@@ -592,12 +598,36 @@ def order_product(product_id):
                            product_id=product_id,
                            quantity=quantity,
                            credit_cards=credit_cards)
-@app.route('/review/<int:product_id>')
+
+
+@app.route('/review/<int:product_id>', methods=['GET', 'POST'])
 def review_product(product_id):
     quantity = request.args.get('quantity', type=int)
+    order_id = request.args.get('order_id', type=int)
+    buyer_email = session.get('email')
+    if not buyer_email:
+        return "User not logged in", 403
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
+    
+    if request.method == 'POST':
+        # Get rating and detailed review
+        rating = request.form.get('rating')
+        review_desc = request.form.get('review_desc')
+
+        # Insert into Reviews table
+        cursor.execute("""
+            INSERT INTO Reviews (order_id, rate, review_desc)
+            VALUES (?, ?, ?)
+        """, (order_id, rating, review_desc))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('search')) 
+
+
     cursor.execute("""SELECT product_name, seller_email FROM Listings WHERE listing_id = ?""", (product_id,))
     row = cursor.fetchone()
     conn.close()
