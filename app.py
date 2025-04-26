@@ -517,16 +517,39 @@ def order_product(product_id):
 
     if request.method == 'POST':
         if 'add_card' in request.form:
+            # Fetch and clean new card data
             new_card = request.form.get('new_credit_card', '').strip()
-            if not new_card.isdigit() or len(new_card) != 16:
+            card_type = request.form.get('card_type', '').strip()
+            expire_month = request.form.get('expire_month', '').strip()
+            expire_year = request.form.get('expire_year', '').strip()
+            security_code = request.form.get('security_code', '').strip()
+
+            # Basic validation
+            if not (new_card.isdigit() and len(new_card) == 16):
                 flash("Credit card must be exactly 16 digits.", "error")
+            elif not card_type:
+                flash("Card type is required.", "error")
+            elif not (expire_month.isdigit() and 1 <= int(expire_month) <= 12):
+                flash("Invalid expiration month.", "error")
+            elif not (expire_year.isdigit() and 2025 <= int(expire_year) <= 2035):
+                flash("Invalid expiration year.", "error")
+            elif not (security_code.isdigit() and len(security_code) in [3, 4]):
+                flash("Security code must be 3 or 4 digits.", "error")
             else:
-                # Insert new card into CreditCards table
-                #cursor.execute("""
-                #    INSERT INTO CreditCards (credit_card_num, owner_email)
-                #    VALUES (?, ?)
-                #""", (new_card, buyer_email))
-                #conn.commit()
+                formatted_card = '-'.join(new_card[i:i+4] for i in range(0, 16, 4))
+            # Check if card already exists
+            cursor.execute("SELECT 1 FROM CreditCards WHERE credit_card_num = ?", (formatted_card,))
+            existing_card = cursor.fetchone()
+
+            if existing_card:
+                flash("This credit card is already registered.", "error")
+            else:
+                # Insert into CreditCards table
+                cursor.execute("""
+                    INSERT INTO CreditCards (credit_card_num, card_type, expire_month, expire_year, security_code, owner_email)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (formatted_card, card_type, expire_month, expire_year, security_code, buyer_email))
+                conn.commit()
                 flash("Credit card added successfully!", "success")
 
             # Refresh credit cards after insert
@@ -558,6 +581,9 @@ def order_product(product_id):
             conn.close()
 
             return redirect(url_for('review_product', product_id=product_id, quantity=quantity_to_purchase))
+        
+
+
 
     quantity = request.args.get('quantity', type=int)
     conn.close()

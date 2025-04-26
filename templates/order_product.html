@@ -172,33 +172,53 @@
         </div>
       {% endif %}
   
-      <!-- Form on its own line -->
-      <form method="post" style="display: flex; flex-direction: column; gap: 16px;">
+      <form method="post" style="display: flex; flex-direction: column; gap: 8px;">
         <!-- Hidden quantity -->
         <input type="hidden" name="quantity" value="{{ quantity }}">
-  
-        <!-- Credit card dropdown on its own line -->
-        <div>
-          <label for="credit_card">Select a credit card:</label><br>
-          <select name="credit_card_id" id="credit_card" required>
-            {% for card in credit_cards %}
-              <option value="{{ card.id }}">{{ card.credit_card_num }}</option>
-            {% endfor %}
-          </select>
-        </div>
       
-        <!-- New credit card input -->
-        <div>
-          <label for="new_credit_card">Add a new credit card (do not include any dashes, only numbers):</label><br>
-          <input type="text" name="new_credit_card" id="new_credit_card" pattern="\d{16}" maxlength="16" placeholder="Enter 16-digit card number">
-          <button type="submit" name="add_card" value="1">Add Credit Card</button>
-        </div>
+        <label for="credit_card">Select a credit card:</label>
+        <select name="credit_card_id" id="credit_card" required>
+          {% for card in credit_cards %}
+            <option value="{{ card.id }}">{{ card.credit_card_num }}</option>
+          {% endfor %}
+        </select>
       
         <h3>Total Amount: ${{ "%.2f"|format(product.price * quantity) }}</h3>
       
-        <!-- Submit purchase -->
-        <div>
-          <button type="submit" name="purchase" value="1">Purchase {{ quantity }}</button>
+        <button type="submit" name="purchase" value="1">Purchase {{ quantity }}</button>
+      </form>
+      
+      <!-- Boxed form for adding a new credit card -->
+      <form method="post" style="margin-top: 30px;">
+        <div style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; background-color: #f9f9f9;">
+          <h3>Or Add a New Credit Card (Optional):</h3>
+      
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label for="new_credit_card">Card Number (16 digits):</label>
+            <input type="text" name="new_credit_card" id="new_credit_card" pattern="\d{16}" maxlength="16" placeholder="Enter 16-digit card number" required>
+      
+            <label for="card_type">Card Type:</label>
+            <input type="text" name="card_type" id="card_type" placeholder="e.g., Visa, MasterCard" required>
+      
+            <label for="expire_month">Expiration Month:</label>
+            <select name="expire_month" id="expire_month" required>
+              {% for month in range(1, 13) %}
+                <option value="{{ month }}">{{ month }}</option>
+              {% endfor %}
+            </select>
+      
+            <label for="expire_year">Expiration Year:</label>
+            <select name="expire_year" id="expire_year" required>
+              {% for year in range(2025, 2036) %}
+                <option value="{{ year }}">{{ year }}</option>
+              {% endfor %}
+            </select>
+      
+            <label for="security_code">Security Code (CVV):</label>
+            <input type="text" name="security_code" id="security_code" placeholder="e.g., 123" pattern="\d{3,4}" required>
+      
+            <button type="submit" name="add_card" value="1" style="margin-top: 10px;">Add Credit Card</button>
+          </div>
         </div>
       </form>
       
