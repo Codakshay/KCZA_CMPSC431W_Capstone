@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Profile</title>
+  <title>Update Profile</title>
   <style>
     /* CSS Reset */
     * {
@@ -76,28 +76,6 @@
       margin-bottom: 15px;
     }
 
-    .link-list {
-      list-style-type: none;
-      padding-left: 0;
-      margin-top: 20px;
-    }
-
-    .link-list li {
-      margin-bottom: 10px;
-    }
-
-    .link-list a,
-    .container a {
-      color: #5A67D8;
-      text-decoration: none;
-      font-size: 0.95rem;
-    }
-
-    .link-list a:hover,
-    .container a:hover {
-      text-decoration: underline;
-    }
-
     .flash-messages {
       margin-bottom: 20px;
       padding: 10px;
@@ -109,12 +87,26 @@
 
     .flash-messages ul {
       list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #5A67D8;
+      font-size: 0.95rem;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>User Profile</h2>
+    <h2>Update Profile</h2>
 
     {% with messages = get_flashed_messages() %}
       {% if messages %}
@@ -139,16 +131,8 @@
       <input type="submit" value="Update Profile">
     </form>
 
-    <ul class="link-list">
-      <li><a href="{{ url_for('add_listing') }}">Add Product Listing</a></li>
-      <li><a href="{{ url_for('seller_dashboard') }}">View Seller Dashboard</a></li>
-      <li><a href="{{ url_for('buyer_dashboard') }}">View Buyer Dashboard</a></li>
-      <li><a href="{{ url_for('view_category', parent_category='All') }}">Browse Categories</a></li>
-      <li><a href="{{ url_for('search') }}">Search for a Product</a></li>
-    </ul>
-
-    <br>
     <a href="{{ url_for('logout') }}">Logout</a>
   </div>
 </body>
 </html>
+
