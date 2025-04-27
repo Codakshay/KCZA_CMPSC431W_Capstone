@@ -116,7 +116,11 @@ def generate_listing_id(seller_email):
 def index():
     try:
         if session['email']:
-            return redirect(url_for('profile'))
+            roles = get_user_role(session['email'])
+            if "Seller" in roles:
+                return redirect(url_for('seller_dashboard'))
+            elif "Buyer" in roles:
+                return redirect(url_for('buyer_dashboard'))
     except:
         pass
     return render_template('index.html')
