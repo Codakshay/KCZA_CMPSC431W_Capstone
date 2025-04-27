@@ -82,11 +82,37 @@
    a:hover {
      text-decoration: underline;
    }
+
+   .flash-messages {
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #E0F7FA;
+      border: 1px solid #81D4FA;
+      color: #01579B;
+      border-radius: 4px;
+    }
+
+    .flash-messages ul {
+      list-style-type: none;
+    }
+
  </style>
 </head>
 <body>
  <div class="container">
    <h2>Seller Dashboard for {{ session.get('business_name') }}</h2>
+
+     {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-messages">
+          <ul>
+            {% for msg in messages %}
+              <li>{{ msg }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    {% endwith %}
 
 
    {% if 'Buyer' in roles %}
