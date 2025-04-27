@@ -568,13 +568,15 @@ def order_product(product_id):
             cursor.execute("SELECT 1 FROM CreditCards WHERE credit_card_num = ?", (formatted_card,))
             existing_card = cursor.fetchone()
 
-
-            # Insert into CreditCards table
-            cursor.execute("""
-                INSERT INTO CreditCards (credit_card_num, card_type, expire_month, expire_year, security_code, owner_email)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (formatted_card, card_type, expire_month, expire_year, security_code, buyer_email))
-            conn.commit()
+            try:
+                # Insert into CreditCards table
+                cursor.execute("""
+                    INSERT INTO CreditCards (credit_card_num, card_type, expire_month, expire_year, security_code, owner_email)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (formatted_card, card_type, expire_month, expire_year, security_code, buyer_email))
+                conn.commit()
+            except:
+                return "Credit card already exists", 400
 
             # Refresh credit cards after insert
             cursor.execute("SELECT rowid, credit_card_num FROM CreditCards WHERE owner_email = ?", (buyer_email,))
