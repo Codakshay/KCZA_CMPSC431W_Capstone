@@ -151,6 +151,15 @@
         <div class="product-detail">
           <span class="label">Seller:</span> {{ product.business_name }}
         </div>
+
+        <div class="product-detail">
+          <span class="label">Seller Rating:</span> 
+          {% if product.seller_rating is not none %}
+            {{ product.seller_rating }}/5
+          {% else %}
+            No ratings yet
+          {% endif %}
+        </div>
         
         <div class="product-detail">
           <span class="label">Unit Price:</span> ${{ "%.2f"|format(product.price) }}

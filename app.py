@@ -437,31 +437,48 @@ def get_business_email(name):
 def show_product(seller_name, product_id):
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
+    
+    # Fetch product info
     cursor.execute("""
-    SELECT 
-        Listings.product_name, 
-        Listings.product_price, 
-        Listings.seller_email, 
-        Listings.Product_Description,
-        Listings.status, 
-        Listings.quantity
-    FROM Listings
-    WHERE Listings.listing_id = ?
-""", (product_id,))
+        SELECT 
+            Listings.product_name, 
+            Listings.product_price, 
+            Listings.seller_email, 
+            Listings.Product_Description,
+            Listings.status, 
+            Listings.quantity
+        FROM Listings
+        WHERE Listings.listing_id = ?
+    """, (product_id,))
     row = cursor.fetchone()
 
     if row:
+        seller_email = row[2]
+
+        # Fetch seller's average rating
+        cursor.execute("""
+            SELECT AVG(Rate) FROM Reviews
+            INNER JOIN Orders ON Reviews.order_id = Orders.order_id
+            WHERE Orders.seller_email = ?
+        """, (seller_email,))
+        rating_row = cursor.fetchone()
+        seller_rating = round(rating_row[0], 2) if rating_row and rating_row[0] is not None else None
+
         product = {
             'name': row[0],
             'price': row[1],
-            'seller_email': row[2],
+            'seller_email': seller_email,
             'description': row[3],
             'status': row[4],
             'quantity': row[5],
-            'business_name': seller_name
+            'business_name': seller_name,
+            'seller_rating': seller_rating
         }
+
+        conn.close()
         return render_template('product.html', product=product, product_id=product_id)
     else:
+        conn.close()
         return "Product not found", 404
     
 
@@ -501,6 +518,17 @@ def order_product(product_id):
         conn.close()
         return "Product not found", 404
 
+    seller_email = row[2]
+
+    # Fetch seller's average rating
+    cursor.execute("""
+        SELECT AVG(Rate) FROM Reviews
+        INNER JOIN Orders ON Reviews.order_id = Orders.order_id
+        WHERE Orders.seller_email = ?
+    """, (seller_email,))
+    rating_row = cursor.fetchone()
+    seller_rating = round(rating_row[0], 2) if rating_row and rating_row[0] is not None else None
+
     product = {
         'name': row[0],
         'price': row[1],
@@ -509,7 +537,8 @@ def order_product(product_id):
         'status': row[4],
         'quantity': row[5],
         'business_name': row[6],
-        'listing_id': row[7]
+        'listing_id': row[7],
+        'seller_rating': seller_rating
     }
 
 
@@ -567,7 +596,7 @@ def order_product(product_id):
             cursor.execute("UPDATE Listings SET quantity = ? WHERE listing_id = ?", (new_quantity, product_id))
 
             if new_quantity == 0:
-                cursor.execute("UPDATE Listings SET status = 0 WHERE listing_id = ?", (product_id,))
+                cursor.execute("UPDATE Listings SET status = 2 WHERE listing_id = ?", (product_id,))
 
             total_sale_amount = product['price'] * quantity_to_purchase
             cursor.execute("""
@@ -628,7 +657,15 @@ def review_product(product_id):
         return redirect(url_for('search')) 
 
 
-    cursor.execute("""SELECT product_name, seller_email FROM Listings WHERE listing_id = ?""", (product_id,))
+    cursor.execute("""
+    SELECT 
+        Listings.product_name, 
+        Sellers.business_name,
+        Listings.Listing_ID
+    FROM Listings
+    JOIN Sellers ON Listings.seller_email = Sellers.email
+    WHERE Listings.listing_id = ?
+""", (product_id,))
     row = cursor.fetchone()
     conn.close()
 
@@ -637,7 +674,7 @@ def review_product(product_id):
 
     product = {
         'name': row[0],
-        'seller_email': row[1]
+        'business_name': row[1]
     }
 
     return render_template('review_product.html', product=product, quantity=quantity)
