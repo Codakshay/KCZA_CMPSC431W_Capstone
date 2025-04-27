@@ -139,7 +139,7 @@
 </style>
 <body>
   <div class="container">
-    
+
   <h2 style="text-align: left; margin-bottom: 24px; color: #333;">
     You are purchasing the product below
   </h2>
@@ -147,24 +147,24 @@
     <!-- Product card on its own line -->
     <div class="product-card" style="margin-bottom: 24px;">
       <h2>{{ product.name }}</h2>
-      
+
       <div class="product-detail">
         <span class="label">Seller:</span> {{ product.business_name }}
       </div>
 
       <div class="product-detail">
-        <span class="label">Seller Rating:</span> 
+        <span class="label">Seller Rating:</span>
         {% if product.seller_rating is not none %}
           {{ product.seller_rating }}/5
         {% else %}
           No ratings yet
         {% endif %}
       </div>
-      
+
       <div class="product-detail">
         <span class="label">Unit Price:</span> ${{ "%.2f"|format(product.price) }}
       </div>
-      
+
       <div class="product-detail">
         <span class="label">Available Quantity:</span> {{ product.quantity }}
       </div>
@@ -177,7 +177,7 @@
     <!-- Purchase Form on its own line -->
     <div style="margin-bottom: 24px;">
       <form action="{{ url_for('order_product', product_id=product_id) }}" method="get" style="display: flex; flex-direction: column; gap: 16px; max-width: 300px;">
-        
+
         <!-- Quantity selector -->
         <div>
           <label for="quantity"><strong>Select Quantity:</strong></label>
@@ -194,6 +194,26 @@
         </div>
       </form>
     </div>
+    <!-- Reviews Section -->
+<div class="reviews-container" style="margin-top: 40px;">
+  <h2 style="text-align: left; margin-bottom: 16px; color: #333;">
+    Product Reviews
+  </h2>
+
+  {% if reviews %}
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      {% for review in reviews %}
+        <div class="product-card" style="background: linear-gradient(to right, #edf2f7, #e2e8f0); border-left: 5px solid #48BB78;">
+          <p><strong>Rating:</strong> {{ review.rating }}/5</p>
+          <p><strong>Review:</strong> {{ review.description }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color: #555;">No reviews yet for this product.</p>
+  {% endif %}
+</div>
+
 
   </div>
 </body>

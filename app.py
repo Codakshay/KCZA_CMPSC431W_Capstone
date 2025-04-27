@@ -342,9 +342,10 @@ def seller_dashboard():
    conn = sqlite3.connect(DATABASE)
    cursor = conn.cursor()
    cursor.execute("""
-       SELECT Listing_ID, Product_Title, Category, Quantity, Product_Price
+       SELECT Listing_ID, Seller_Email, Title, Category, Quantity, Price
        FROM Listings
        WHERE Seller_Email = ?
+
    """, (email,))
    listings = cursor.fetchall()
    conn.close()
@@ -416,11 +417,12 @@ def get_business_email(name):
     conn.close()
     return result['email'] if result else "Unknown Seller"
 
+
 @app.route('/product/<string:seller_name>/<int:product_id>')
 def show_product(seller_name, product_id):
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    
+
     # Fetch product info
     cursor.execute("""
         SELECT 
@@ -440,13 +442,15 @@ def show_product(seller_name, product_id):
 
         # Fetch seller's average rating
         cursor.execute("""
-            SELECT AVG(Rate) FROM Reviews
-            INNER JOIN Orders ON Reviews.order_id = Orders.order_id
+            SELECT AVG(Rate) 
+            FROM Reviews
+            INNER JOIN Orders ON Reviews.Order_ID = Orders.Order_ID
             WHERE Orders.seller_email = ?
         """, (seller_email,))
         rating_row = cursor.fetchone()
         seller_rating = round(rating_row[0], 2) if rating_row and rating_row[0] is not None else None
 
+        # Build product dictionary
         product = {
             'name': row[0],
             'price': row[1],
@@ -458,12 +462,24 @@ def show_product(seller_name, product_id):
             'seller_rating': seller_rating
         }
 
+        #  Fetch product reviews
+        cursor.execute("""
+            SELECT Reviews.Rate, Reviews.Review_Desc
+            FROM Reviews
+            INNER JOIN Orders ON Reviews.Order_ID = Orders.Order_ID
+            WHERE Orders.Listing_ID = ?
+        """, (product_id,))
+        review_rows = cursor.fetchall()
+
+        reviews = [{'rating': r[0], 'description': r[1]} for r in review_rows]
+
         conn.close()
-        return render_template('product.html', product=product, product_id=product_id)
+
+        return render_template('product.html', product=product, product_id=product_id, reviews=reviews)
+
     else:
         conn.close()
         return "Product not found", 404
-    
 
 
 def generate_order_id():
