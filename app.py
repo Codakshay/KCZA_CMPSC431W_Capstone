@@ -214,11 +214,14 @@ def request_email_change():
 
     return render_template('request_email_change.html', current_email=current_email)
 
-def get_buyer_business_name(email):
+def get_business_name(email):
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     cursor = conn.execute("SELECT business_name FROM Buyers WHERE email = ?", (email,))
     result = cursor.fetchone()
+    if not result:
+        cursor = conn.execute("SELECT business_name FROM Sellers WHERE email = ?", (email,))
+        result = cursor.fetchone()
     conn.close()
     return result['business_name'] if result else "Unknown Seller"
 
@@ -229,7 +232,7 @@ def login():
 
     if authenticate_user(email, password):
         session['email'] = email
-        session['business_name'] = get_buyer_business_name(email)
+        session['business_name'] = get_business_name(email)
         flash("Login successful!")
     else:
         flash("Invalid email or password.")
@@ -539,12 +542,6 @@ def order_product(product_id):
         'listing_id': row[7],
         'seller_rating': seller_rating
     }
-
-
-    # Get list of credit cards
-    cursor.execute("SELECT credit_card_num, owner_email FROM CreditCards")
-    cards = cursor.fetchall()
-    credit_cards = [{'credit_card_num': c[0], 'owner_email': c[1]} for c in cards]
 
     # Get current buyer's email from session
     buyer_email = session.get('email')
