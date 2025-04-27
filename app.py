@@ -214,6 +214,14 @@ def request_email_change():
 
     return render_template('request_email_change.html', current_email=current_email)
 
+def get_buyer_business_name(email):
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.execute("SELECT business_name FROM Buyers WHERE email = ?", (email,))
+    result = cursor.fetchone()
+    conn.close()
+    return result['business_name'] if result else "Unknown Seller"
+
 @app.route('/login', methods=['POST'])
 def login():
     email = request.form.get('email')
@@ -221,6 +229,7 @@ def login():
 
     if authenticate_user(email, password):
         session['email'] = email
+        session['business_name'] = get_buyer_business_name(email)
         flash("Login successful!")
     else:
         flash("Invalid email or password.")

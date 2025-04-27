@@ -11,7 +11,7 @@ def get_matching_sellers(keywords):
     conn.close()
     return matching_sellers
 
-def get_business_name(email):
+def get_seller_business_name(email):
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     cursor = conn.execute("SELECT business_name FROM Sellers WHERE email = ?", (email,))
@@ -61,7 +61,7 @@ def search_for(keywords, min_price, max_price):
     products = []
     for row in results:
         product = dict(row)
-        product['business_name'] = get_business_name(product['seller_email'])
+        product['business_name'] = get_seller_business_name(product['seller_email'])
         products.append(product)
 
     return products
