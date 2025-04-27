@@ -342,7 +342,7 @@ def seller_dashboard():
    conn = sqlite3.connect(DATABASE)
    cursor = conn.cursor()
    cursor.execute("""
-       SELECT Listing_ID, Seller_Email, Title, Category, Quantity, Price
+       SELECT Listing_ID, Seller_Email, Product_Title, Category, Quantity, Product_Price
        FROM Listings
        WHERE Seller_Email = ?
 
