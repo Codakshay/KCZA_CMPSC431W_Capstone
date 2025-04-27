@@ -318,44 +318,60 @@ def add_listing():
 
 @app.route('/seller/dashboard')
 def seller_dashboard():
-    if "email" not in session:
-        flash("Please log in.")
-        return redirect(url_for("index"))
+   if "email" not in session:
+       flash("Please log in.")
+       return redirect(url_for("index"))
 
-    email = session["email"]
-    roles = get_user_role(email)
-    if 'Seller' not in roles:
-        flash("Access restricted: Seller role required.")
-        return redirect(url_for("index"))
 
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT Listing_ID, Product_Title, Category, Quantity, Product_Price, Status 
-        FROM Listings 
-        WHERE Seller_Email = ?
-    """, (email,))
-    listings = cursor.fetchall()
-    conn.close()
-    return render_template("seller_dashboard.html", listings=listings, roles=roles)
+   email = session["email"]
+   roles = get_user_role(email)
+   if 'Seller' not in roles:
+       flash("Access restricted: Seller role required.")
+       return redirect(url_for("index"))
+
+
+   conn = sqlite3.connect(DATABASE)
+   cursor = conn.cursor()
+   cursor.execute("""
+       SELECT Listing_ID, Product_Title, Category, Quantity, Product_Price
+       FROM Listings
+       WHERE Seller_Email = ?
+   """, (email,))
+   listings = cursor.fetchall()
+   conn.close()
+
+
+   return render_template("seller_dashboard.html", listings=listings, roles=roles)
+
 
 
 @app.route('/buyer/dashboard')
 def buyer_dashboard():
-    if "email" not in session:
-        flash("Please log in.")
-        return redirect(url_for("index"))
+   if "email" not in session:
+       flash("Please log in.")
+       return redirect(url_for("index"))
 
-    email = session["email"]
-    roles = get_user_role(email)
-    if 'Buyer' not in roles:
-        flash("Access restricted: Buyer role required.")
-        return redirect(url_for("index"))
 
-    # Dummy order data — replace with real DB queries
-    orders = [
-    ]
-    return render_template("buyer_dashboard.html", orders=orders, roles=roles)
+   email = session["email"]
+   roles = get_user_role(email)
+   if 'Buyer' not in roles:
+       flash("Access restricted: Buyer role required.")
+       return redirect(url_for("index"))
+
+
+   # Query orders from the database
+   conn = sqlite3.connect('nittanybusiness.db')
+   cursor = conn.cursor()
+   cursor.execute('''
+       SELECT Order_ID, Seller_Email, Listing_ID, Date, Quantity, Payment
+       FROM Orders
+       WHERE Buyer_Email = ?
+   ''', (email,))
+   orders = cursor.fetchall()
+   conn.close()
+
+
+   return render_template("buyer_dashboard.html", orders=orders, roles=roles)
 
 
 @app.route('/support_request', methods=['GET', 'POST'])
