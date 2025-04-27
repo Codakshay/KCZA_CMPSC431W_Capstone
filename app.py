@@ -114,15 +114,12 @@ def generate_listing_id(seller_email):
 
 @app.route('/')
 def index():
-    try:
-        if session['email']:
-            roles = get_user_role(session['email'])
-            if "Seller" in roles:
-                return redirect(url_for('seller_dashboard'))
-            elif "Buyer" in roles:
-                return redirect(url_for('buyer_dashboard'))
-    except:
-        pass
+    if 'email' in session:
+        roles = get_user_role(session['email'])
+        if "Seller" in roles:
+            return redirect(url_for('seller_dashboard'))
+        elif "Buyer" in roles:
+            return redirect(url_for('buyer_dashboard'))
     return render_template('index.html')
 
 @app.route('/register', methods=['POST'])
@@ -167,6 +164,7 @@ def register():
     success = register_user_multi_roles(email, password, business_name, address_id, bank_routing_number, bank_account_number, roles)
     if success:
         session['email'] = email  # Automatically log in the user
+        session['business_name'] = business_name
         flash(f"Registration successful as {', '.join(roles)}.")
     else:
         flash("Registration failed. Email might already exist.")

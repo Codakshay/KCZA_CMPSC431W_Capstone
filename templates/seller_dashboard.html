@@ -77,7 +77,7 @@
 </head>
 <body>
   <div class="container">
-    <h2>Seller Dashboard for {{ session.get('email') }}</h2>
+    <h2>Seller Dashboard for {{ session.get('business_name') }}</h2>
 
     {% if 'Buyer' in roles %}
       <form action="{{ url_for('buyer_dashboard') }}" method="get">
