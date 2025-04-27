@@ -345,11 +345,11 @@ def seller_dashboard():
    conn = sqlite3.connect(DATABASE)
    cursor = conn.cursor()
    cursor.execute("""
-       SELECT Listing_ID, Product_Title, Category, Quantity, Product_Price
+       SELECT listing_id, product_title, category, quantity, product_price
        FROM Listings
-       WHERE Seller_Email = ?
-
+       WHERE seller_email = ? AND status = 1
    """, (email,))
+
    listings = cursor.fetchall()
    conn.close()
 
