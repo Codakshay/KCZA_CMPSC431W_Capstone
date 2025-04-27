@@ -14,48 +14,6 @@ DATABASE = 'nittanybusiness.db'
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-# creates the Users table
-# def create_users_table():
-#     conn = sqlite3.connect(DATABASE)
-#     cursor = conn.cursor()
-#     cursor.execute('''
-#         CREATE TABLE IF NOT EXISTS Users (
-#             id INTEGER PRIMARY KEY AUTOINCREMENT,
-#             email TEXT UNIQUE NOT NULL,
-#             hashed_password TEXT NOT NULL
-#         )
-#     ''')
-#     conn.commit()
-#     conn.close()
-
-# inserts a new user into the User table, returns true on success
-# def register_user(email: str, password: str, role: str) -> bool:
-#     """Register a new user and assign a role in a separate table."""
-#     if role == 'HelpDesk':
-#         return False  # Block public HelpDesk registration
-#
-#     hashed_pwd = hash_password(password)
-#     conn = sqlite3.connect(DATABASE)
-#     cursor = conn.cursor()
-#
-#     try:
-#         cursor.execute("INSERT INTO users (email, hashed_password) VALUES (?, ?)", (email, hashed_pwd))
-#
-#         if role == 'Buyer':
-#             cursor.execute("INSERT INTO buyers (email) VALUES (?)", (email,))
-#         elif role == 'Seller':
-#             cursor.execute("INSERT INTO sellers (email) VALUES (?)", (email,))
-#         else:
-#             return False  # Unknown role
-#
-#         conn.commit()
-#         return True
-#
-#     except sqlite3.IntegrityError:
-#         return False  # Email already exists
-#     finally:
-#         conn.close()Buyers
-
 def register_user_multi_roles(email: str, password: str, business_name: str, address_id: str, bank_routing_number: str, bank_account_number: str, roles: list) -> bool:
     hashed_pwd = hash_password(password)
     conn = sqlite3.connect(DATABASE)
