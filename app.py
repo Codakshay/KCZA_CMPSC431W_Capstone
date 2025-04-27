@@ -670,15 +670,18 @@ def delete_listing(listing_id):
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
+    # Set status to 0 (inactive) instead of deleting
     cursor.execute("""
-        DELETE FROM Listings
+        UPDATE Listings
+        SET status = 0
         WHERE listing_id = ?
     """, (listing_id,))
     conn.commit()
     conn.close()
 
-    flash('Listing deleted successfully.')
+    flash('Listing has been marked as inactive.')
     return redirect(url_for('seller_dashboard'))
+
 
 
 @app.route('/review/<int:product_id>', methods=['GET', 'POST'])
