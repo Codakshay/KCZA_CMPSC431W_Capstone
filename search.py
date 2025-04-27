@@ -33,10 +33,11 @@ def search_for(keywords, min_price, max_price):
     query += """
         AND (product_title LIKE ?
         OR product_description LIKE ?
+        OR product_name LIKE ?
         OR category LIKE ?)
     """
     keyword_pattern = f"%{keywords}%"
-    params.extend([keyword_pattern] * 3)
+    params.extend([keyword_pattern] * 4)
 
     matching_seller_emails = get_matching_sellers(keywords)
 
