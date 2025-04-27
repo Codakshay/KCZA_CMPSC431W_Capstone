@@ -168,10 +168,9 @@ def register():
     if success:
         session['email'] = email  # Automatically log in the user
         flash(f"Registration successful as {', '.join(roles)}.")
-        return redirect(url_for('profile'))  # Redirect to profile
     else:
         flash("Registration failed. Email might already exist.")
-        return redirect(url_for('index'))
+    return redirect(url_for('index'))
 
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
@@ -225,10 +224,9 @@ def login():
     if authenticate_user(email, password):
         session['email'] = email
         flash("Login successful!")
-        return redirect(url_for('profile'))
     else:
         flash("Invalid email or password.")
-        return redirect(url_for('index'))
+    return redirect(url_for('index'))
 
 
 
