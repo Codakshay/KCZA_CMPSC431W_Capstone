@@ -342,7 +342,7 @@ def seller_dashboard():
    conn = sqlite3.connect(DATABASE)
    cursor = conn.cursor()
    cursor.execute("""
-       SELECT Listing_ID, Seller_Email, Product_Title, Category, Quantity, Product_Price
+       SELECT Listing_ID, Product_Title, Category, Quantity, Product_Price
        FROM Listings
        WHERE Seller_Email = ?
 
@@ -626,6 +626,59 @@ def order_product(product_id):
                            product_id=product_id,
                            quantity=quantity,
                            credit_cards=credit_cards)
+
+
+@app.route('/edit_listing/<int:listing_id>', methods=['GET', 'POST'])
+def edit_listing(listing_id):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        title = request.form['title']
+        category = request.form['category']
+        quantity = request.form['quantity']
+        price = request.form['price']
+
+        cursor.execute("""
+            UPDATE Listings
+            SET product_title = ?, category = ?, quantity = ?, product_price = ?
+            WHERE listing_id = ?
+        """, (title, category, quantity, price, listing_id))
+        conn.commit()
+        conn.close()
+
+        flash('Listing updated successfully.')
+        return redirect(url_for('seller_dashboard'))
+
+    else:
+        cursor.execute("""
+            SELECT product_title, category, quantity, product_price
+            FROM Listings
+            WHERE listing_id = ?
+        """, (listing_id,))
+        listing = cursor.fetchone()
+        conn.close()
+
+        if listing:
+            return render_template('edit_listing.html', listing_id=listing_id, listing=listing)
+        else:
+            return "Listing not found.", 404
+
+
+@app.route('/delete_listing/<int:listing_id>', methods=['POST'])
+def delete_listing(listing_id):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM Listings
+        WHERE listing_id = ?
+    """, (listing_id,))
+    conn.commit()
+    conn.close()
+
+    flash('Listing deleted successfully.')
+    return redirect(url_for('seller_dashboard'))
 
 
 @app.route('/review/<int:product_id>', methods=['GET', 'POST'])
