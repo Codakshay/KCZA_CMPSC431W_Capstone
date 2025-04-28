@@ -615,7 +615,13 @@ def order_product(product_id):
             if new_quantity == 0:
                 cursor.execute("UPDATE Listings SET status = 2 WHERE listing_id = ?", (product_id,))
 
-            total_sale_amount = product['price'] * quantity_to_purchase    
+            total_sale_amount = product['price'] * quantity_to_purchase
+
+            # check if product is promoted
+            cursor.execute("SELECT category_name FROM Categories WHERE category_name = ?", (product['name'],))
+            if cursor.fetchone() is not None:
+                total_sale_amount *= .95
+
             cursor.execute("""
                 UPDATE Sellers 
                 SET balance = balance + ? 
