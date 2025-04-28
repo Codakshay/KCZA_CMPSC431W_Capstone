@@ -5,7 +5,12 @@ database = "../nittanybusiness.db"
 table = "Sellers"
 csv = "NittanyBusinessDataset_v3/Sellers.csv"
 
+def remove_dash(x):
+    return x.replace('-','')
+
+
 df = pd.read_csv(csv)
+df['bank_routing_number'] = df['bank_routing_number'].apply(remove_dash)
 conn = sqlite3.connect(database)
 cursor = conn.cursor()
 
