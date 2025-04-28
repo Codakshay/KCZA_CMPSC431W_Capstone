@@ -125,6 +125,8 @@ def index():
             return redirect(url_for('seller_dashboard'))
         elif "Buyer" in roles:
             return redirect(url_for('buyer_dashboard'))
+        elif "HelpDesk" in roles:
+            return redirect(url_for('helpdesk_dashboard'))
     return render_template('index.html')
 
 @app.route('/register', methods=['POST'])
