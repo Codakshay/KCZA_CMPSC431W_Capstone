@@ -43,6 +43,7 @@ NittanyBusiness is an online marketplace platform designed to connect small and 
     ├── import_scripts                  # contains import scripts for all tables
     │   └── NittanyBusinessDataset_v3   # CSV files for each table (one for each table)
     │   └── import_[table_name].py      # script for importing data from CSV file to the table (one script for each table)
+    │   └── import_all.py               # script for running all import scripts
     ├── nittanybusiness.db              # SQLite database
     ├── templates                       # Folder for HTML templates
     │   └── index.html                  # HTML template for the main interface (login/registration)
