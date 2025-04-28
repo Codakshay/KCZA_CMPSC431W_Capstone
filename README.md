@@ -13,6 +13,7 @@ NittanyBusiness is an online marketplace platform designed to connect small and 
 - **User Registration:** New users can register as Buyers or Sellers (HelpDesk accounts managed separately).
 - **User Profile Update:** Users can update their personal information and reset their passwords.
 - **Helpdesk Support:** Helpdesk staff can complete requests like changing emails, etc.
+- **Product Promotion:** Sellers may choose to promote their product for a 5% fee, which increases the product's visibility
 
 ## Prerequisites
 
