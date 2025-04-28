@@ -103,6 +103,11 @@ def get_user_role(email: str) -> list:
     return roles
 
 
+def is_helpdesk() -> bool:
+    return 'email' in session and 'HelpDesk' in get_user_role(session['email'])
+
+
+
 def generate_listing_id(seller_email):
     """Generate a unique Listing_ID for the given seller."""
     conn = sqlite3.connect(DATABASE)
@@ -405,22 +410,23 @@ def support_request():
         return redirect(url_for('index'))
 
     if request.method == 'POST':
-        description = request.form.get('description')
-        email = session['email']
+        email         = session['email']
+        req_type      = request.form.get('request_type', 'AddCategory').strip()
+        description   = request.form.get('description', '').strip()
 
-        conn = sqlite3.connect(DATABASE)
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO requests (sender_email, request_desc)
-            VALUES (?, ?)
-        ''', (email, description))
-        conn.commit()
-        conn.close()
+        with sqlite3.connect(DATABASE) as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO requests (sender_email, request_type, request_desc, request_status)
+                VALUES (?, ?, ?, 0)
+            """, (email, req_type, description))
+            conn.commit()
 
         flash("Support request submitted to HelpDesk.")
         return redirect(url_for('profile'))
 
     return render_template('support_request.html')
+
 
 def get_business_email(name):
     conn = sqlite3.connect(DATABASE)
@@ -776,6 +782,119 @@ def review_product(product_id):
     }
 
     return render_template('review_product.html', product=product, quantity=quantity)
+
+
+
+
+@app.route('/helpdesk/dashboard')
+def helpdesk_dashboard():
+    if not is_helpdesk():
+        flash("HelpDesk access required.")
+        return redirect(url_for('index'))
+
+    email = session['email']
+    conn  = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    cur   = conn.cursor()
+
+    # Unassigned requests (status = 0)
+    cur.execute("""
+        SELECT * FROM requests
+        WHERE request_type = 'AddCategory'
+          AND request_status = 0
+        ORDER BY request_id
+    """)
+    unassigned = cur.fetchall()
+
+    # Claimed/Completed requests (filter from session)
+    my_claimed = session.get('claimed_requests', [])
+
+    my_requests = []
+    if my_claimed:
+        format_strings = ','.join(['?'] * len(my_claimed))
+        cur.execute(f"""
+            SELECT * FROM requests
+            WHERE request_id IN ({format_strings})
+            ORDER BY request_status, request_id
+        """, tuple(my_claimed))
+        my_requests = cur.fetchall()
+
+    conn.close()
+
+    return render_template('helpdesk_dashboard.html',
+                           unassigned=unassigned,
+                           my_requests=my_requests)
+
+
+@app.route('/helpdesk/claim/<int:req_id>', methods=['POST'])
+def claim_request(req_id):
+    if not is_helpdesk():
+        return redirect(url_for('index'))
+
+    # Save claim into session
+    claimed = session.get('claimed_requests', [])
+    if req_id not in claimed:
+        claimed.append(req_id)
+    session['claimed_requests'] = claimed
+
+    # Update database: mark request_status = 1 (in-progress)
+    with sqlite3.connect(DATABASE) as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE requests
+            SET request_status = 1
+            WHERE request_id = ? AND request_status = 0
+        """, (req_id,))
+        conn.commit()
+
+    flash("Request claimed.")
+    return redirect(url_for('helpdesk_dashboard'))
+
+
+@app.route('/helpdesk/complete/<int:req_id>', methods=['POST'])
+def complete_request(req_id):
+    if not is_helpdesk():
+        return redirect(url_for('index'))
+
+    claimed = session.get('claimed_requests', [])
+    if req_id not in claimed:
+        flash("You must claim this request first.")
+        return redirect(url_for('helpdesk_dashboard'))
+
+    with sqlite3.connect(DATABASE) as conn:
+        cur = conn.cursor()
+        # Get description to extract category
+        cur.execute("""
+            SELECT request_desc FROM requests
+            WHERE request_id = ?
+        """, (req_id,))
+        row = cur.fetchone()
+        if not row:
+            flash("Request not found.")
+            return redirect(url_for('helpdesk_dashboard'))
+
+        desc = row[0]
+        new_cat = desc.strip().split()[-1]  # naive extraction
+
+        # Add category if missing
+        cur.execute("SELECT 1 FROM Categories WHERE category_name = ?", (new_cat,))
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO Categories (category_name, parent_category)
+                VALUES (?, 'Root')
+            """, (new_cat,))
+
+        # Mark request as completed
+        cur.execute("""
+            UPDATE requests
+            SET request_status = 2
+            WHERE request_id = ?
+        """, (req_id,))
+        conn.commit()
+
+    flash(f"Category '{new_cat}' added and request marked complete.")
+    return redirect(url_for('helpdesk_dashboard'))
+
 
 
 if __name__ == '__main__':
