@@ -60,5 +60,6 @@ NittanyBusiness is an online marketplace platform designed to connect small and 
     │   └── search.html                 # HTML template for searching for products
     │   └── seller_dashboard.html       # HTML template for the seller dashboard
     │   └── support_request.html        # HTML template for support requests
+    |   └── Helpdesk_dashboard.html     # HTML template for the help desk dashboard
     └── README.md                       # Project documentation
 
