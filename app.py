@@ -271,9 +271,20 @@ def view_category(parent_category):
     products = []
     if query_category != "Root":
         cursor.execute(
-            #"SELECT Seller_Email, Listing_ID, Product_Title, Product_Price FROM Listings WHERE Category = ? AND Status = 1",
             "SELECT Listings.Seller_Email, Listings.Listing_ID, Listings.Product_Name, Listings.Product_Price, Sellers.business_name FROM Listings, Sellers WHERE Listings.Category = ? AND Listings.Status = 1 AND Listings.seller_email = Sellers.email", (query_category,))
         products = cursor.fetchall()
+
+    
+    if parent_category.endswith("- Promoted"):
+        print(query_category.removesuffix(" - Promoted"))
+        cursor.execute(
+            """SELECT Listings.Listing_ID, Sellers.business_name
+                FROM Listings, Sellers
+                WHERE Listings.Product_Title = ? AND Listings.seller_email = Sellers.email
+            """, (query_category.removesuffix(" - Promoted"),))
+        products = cursor.fetchone()
+        return redirect(url_for('show_product', seller_name=products[1],product_id=products[0]))
+    
     conn.close()
 
     user_role = None
@@ -596,7 +607,7 @@ def order_product(product_id):
             if new_quantity == 0:
                 cursor.execute("UPDATE Listings SET status = 2 WHERE listing_id = ?", (product_id,))
 
-            total_sale_amount = product['price'] * quantity_to_purchase
+            total_sale_amount = product['price'] * quantity_to_purchase    
             cursor.execute("""
                 UPDATE Sellers 
                 SET balance = balance + ? 
@@ -637,12 +648,29 @@ def edit_listing(listing_id):
         category = request.form['category']
         quantity = request.form['quantity']
         price = request.form['price']
+        promote = request.form.get('promote')
 
         cursor.execute("""
             UPDATE Listings
             SET product_title = ?, category = ?, quantity = ?, product_price = ?
             WHERE listing_id = ?
         """, (title, category, quantity, price, listing_id))
+
+        if promote == '1':
+            cursor.execute("""
+                INSERT INTO Categories (parent_category, category_name)
+                SELECT 'Root', ?
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM Categories WHERE parent_category = 'Root' AND category_name = ?
+                )
+            """, (title + " - Promoted", title + " - Promoted"))
+        else:
+            cursor.execute("""
+                DELETE FROM Categories
+                WHERE parent_category = 'Root' AND category_name = ?
+            """, (title + " - Promoted",))
+
+
         conn.commit()
         conn.close()
 
@@ -656,12 +684,28 @@ def edit_listing(listing_id):
             WHERE listing_id = ?
         """, (listing_id,))
         listing = cursor.fetchone()
+
+        cursor.execute("""
+            SELECT parent_category, category_name
+            FROM Categories
+            WHERE Categories.category_name = ?
+        """, (listing[0]+" - Promoted",))
+
+
+        # add info on if it is already promoted
+        listing_info = list(listing)
+        category_heirarchy = cursor.fetchone()
+        if category_heirarchy is not None and category_heirarchy[0] == "Root":
+            listing_info.append(True)
+        else:
+            listing_info.append(False)
         conn.close()
 
-        if listing:
-            return render_template('edit_listing.html', listing_id=listing_id, listing=listing)
+        if listing_info:
+            return render_template('edit_listing.html', listing_id=listing_id, listing=listing_info)
         else:
             return "Listing not found.", 404
+
 
 
 @app.route('/delete_listing/<int:listing_id>', methods=['POST'])
